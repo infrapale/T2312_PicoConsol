@@ -1,2 +1,5 @@
 # T2312_PicoConsol
-TFT consol
+TFT ILI9341 consol
+- 4 keys
+- SD-card
+- PicoW
