@@ -1,3 +1,9 @@
+/**
+
+  https://github.com/adafruit/Adafruit_MQTT_Library
+
+ */
+
 #include "aio_mqtt.h"
 
 #include <stdint.h>
@@ -7,6 +13,8 @@
 #include "main.h"
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
+#include "time.h"
+#include "log.h"
 
 typedef struct 
 {
@@ -69,6 +77,9 @@ void aio_mqtt_stm(void *param)
 {
     (void) param;
     uint16_t v_delay_ms = 5000 ;
+    String time_str; 
+    float  value;
+
     // Serial.println(F("aio_mqtt_stm - init"));
     while(true)
     {
@@ -100,14 +111,28 @@ void aio_mqtt_stm(void *param)
           break;
         case 3:
           Serial.print(F("Read Subscription\n"));
+          time_to_string(&time_str);
+          Serial.println(time_str);
           while ((aio_subscription = aio_mqtt.readSubscription(500))) 
           {
               Serial.println(aio_subscription->topic);
+              for (aio_subs_et sindx = AIO_SUBS_VA_OD_TEMP; sindx < AIO_SUBS_NBR_OF; sindx++ )
+              {
+                  if (aio_subscription == aio_subs[sindx]) 
+                  {
+                      Serial.print(aio_subs[sindx]->topic);
+                      Serial.print(F(": "));
+                      Serial.println((char*)aio_subs[sindx]->lastread);
+                      //ctrl.set_temp = atoi((char *)set_temperature.lastread);
+                      //Serial.println(ctrl.set_temp);
+                  }                  
+              }
+
               if (aio_subscription == aio_subs[AIO_SUBS_VA_OD_TEMP]) 
               {
                   Serial.print(F("OD Temperature: "));
                   Serial.println((char*)aio_subs[AIO_SUBS_VA_OD_TEMP]->lastread);
-                  //ctrl.set_temp = atoi((char *)set_temperature.lastread);
+                  value = atoi((char *)set_temperature.lastread);
                   //Serial.println(ctrl.set_temp);
               }
           }

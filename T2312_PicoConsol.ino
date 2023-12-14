@@ -5,6 +5,8 @@
 https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial1-creating-freertos-task-to-blink-led-in-arduino-uno
 https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial-using-semaphore-and-mutex-in-freertos-with-arduino
 
+
+
  */
 
 //  This sketch uses the GLCD (font 1) and fonts 2, 4, 6, 7, 8
@@ -16,6 +18,8 @@ https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial-usi
 //#define LILLA_ASTRID
 //#define VILLA_ASTRID
 
+#define PIN_WIRE_SDA         (12u)
+#define PIN_WIRE_SCL         (13u)
 
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
@@ -25,8 +29,11 @@ https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial-usi
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
 #include "secrets.h"
-
+#include <Wire.h>
+#include "RTClib.h"
+#include "time.h"
 #include "aio_mqtt.h"
+#include "log.h"
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
@@ -41,6 +48,8 @@ WiFiClient client;
 #define AIO_USERNAME    IO_USERNAME
 #define AIO_KEY         IO_KEY
 #define AIO_PUBLISH_INTERVAL_ms  60000
+
+// RTC_PCF8563 rtc;
 
 Adafruit_MQTT_Client aio_mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
 Adafruit_MQTT_Publish villa_astrid_home_mode   = Adafruit_MQTT_Publish(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.astrid-mode");
@@ -74,6 +83,11 @@ void setup(void) {
   pinMode(TFT_BL, OUTPUT);  
   digitalWrite(TFT_BL, HIGH);
 
+  Wire.setSDA(PIN_WIRE_SDA);
+  Wire.setSCL(PIN_WIRE_SCL);
+  Wire.begin();
+  time_begin();
+
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   Serial.println(F("setup - wifi begin .. "));
   while (WiFi.status() != WL_CONNECTED) 
@@ -103,6 +117,8 @@ void setup(void) {
 
   menu_draw();
 
+  log_initialize();
+  // log_fill_test_data(30);   log_fill_test_data(70);
 }
 
 void setup1()
