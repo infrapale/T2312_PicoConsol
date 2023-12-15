@@ -15,6 +15,7 @@
 #include "Adafruit_MQTT_Client.h"
 #include "time.h"
 #include "log.h"
+#include "dashboard.h"
 
 typedef struct 
 {
@@ -36,6 +37,8 @@ aio_mqtt_ctrl_st aio_mqtt_ctrl =
 extern Adafruit_MQTT_Subscribe *aio_subs[];
 extern Adafruit_MQTT_Publish *aio_publ[];
 extern Adafruit_MQTT_Client aio_mqtt;
+
+extern value_st subs_data[];
 
 Adafruit_MQTT_Subscribe *aio_subscription;
 
@@ -78,11 +81,14 @@ void aio_mqtt_stm(void *param)
     (void) param;
     uint16_t v_delay_ms = 5000 ;
     String time_str; 
+    String value_str;
     float  value;
+    uint32_t unix_time;
 
     // Serial.println(F("aio_mqtt_stm - init"));
     while(true)
     {
+      unix_time = time_get_epoc_time();
       // Serial.print(F("aio_mqtt_stm - while "));
       // Serial.println(state);
       switch(aio_mqtt_ctrl.state)
@@ -116,24 +122,23 @@ void aio_mqtt_stm(void *param)
           while ((aio_subscription = aio_mqtt.readSubscription(500))) 
           {
               Serial.println(aio_subscription->topic);
-              for (aio_subs_et sindx = AIO_SUBS_VA_OD_TEMP; sindx < AIO_SUBS_NBR_OF; sindx++ )
+              for (uint8_t sindx = AIO_SUBS_VA_OD_TEMP; sindx < AIO_SUBS_NBR_OF; sindx++ )
               {
                   if (aio_subscription == aio_subs[sindx]) 
                   {
                       Serial.print(aio_subs[sindx]->topic);
                       Serial.print(F(": "));
-                      Serial.println((char*)aio_subs[sindx]->lastread);
+                      value_str = (char*)aio_subs[sindx]->lastread;
+                      Serial.println(value_str);
+                      value = value_str.toFloat();
+                      log_add_subs_data((aio_subs_et)sindx, unix_time, value);
+
+                      subs_data[sindx].value = value;
+                      subs_data[sindx].updated = true;
+
                       //ctrl.set_temp = atoi((char *)set_temperature.lastread);
                       //Serial.println(ctrl.set_temp);
                   }                  
-              }
-
-              if (aio_subscription == aio_subs[AIO_SUBS_VA_OD_TEMP]) 
-              {
-                  Serial.print(F("OD Temperature: "));
-                  Serial.println((char*)aio_subs[AIO_SUBS_VA_OD_TEMP]->lastread);
-                  value = atoi((char *)set_temperature.lastread);
-                  //Serial.println(ctrl.set_temp);
               }
           }
           aio_mqtt_ctrl.state++;

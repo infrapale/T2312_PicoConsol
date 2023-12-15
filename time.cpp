@@ -1,13 +1,15 @@
 // https://github.com/adafruit/RTClib/blob/master/src/RTClib.h
 
 #include <Wire.h>
-#include "RTClib.h"
 #include "time.h"
 
 //extern RTC_PCF8563 rtc;
 RTC_PCF8563 rtc;
 
 char week_day[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+DateTime time_now;
+
 
 bool time_begin(void)
 {
@@ -52,6 +54,13 @@ void time_lost_power(bool force_new_time)
   }
 
 }
+
+DateTime *time_get_time_now(void)
+{
+    time_now = rtc.now();
+    return &time_now;
+}
+
 
 void time_to_string(String *Str)
 {

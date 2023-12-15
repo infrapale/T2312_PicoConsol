@@ -34,6 +34,7 @@ https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial-usi
 #include "time.h"
 #include "aio_mqtt.h"
 #include "log.h"
+#include "dashboard.h"
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
@@ -67,6 +68,12 @@ Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
 {
   [AIO_PUBL_VA_HOME_MODE] = &villa_astrid_home_mode,
   [AIO_PUBL_VA_AC_TEMP]  = &villa_astrid_home_mode
+};
+
+value_st subs_data[AIO_SUBS_NBR_OF]
+{
+  [AIO_SUBS_VA_OD_TEMP] = {"VA OD Temp ", " C", 0.0},
+  [AIO_SUBS_VA_OD_HUM]  = {"VA OD Hum ",  " kPa", 0.0}
 };
 
 
@@ -107,7 +114,7 @@ void setup(void) {
   } 
   
   xTaskCreate(aio_mqtt_stm,"AIO_MQTT",4*4096,nullptr,1,nullptr);
-  //xTaskCreate(blink2,"BLINK2",128,nullptr,1,nullptr);
+  xTaskCreate(dashboard_update_task,"Dashboard",1024,nullptr,1,nullptr);
   sema_v = xSemaphoreCreateBinary();
 
   tft.init();
@@ -117,6 +124,7 @@ void setup(void) {
 
   menu_draw();
 
+  dashboard_draw_box(0);  // clear dashboard
   log_initialize();
   // log_fill_test_data(30);   log_fill_test_data(70);
 }

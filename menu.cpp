@@ -6,6 +6,8 @@
 
 #define NBR_MENU_KEYS  4
 
+extern TFT_eSPI tft;
+
 void dummy_cb()
 {
    // 
@@ -75,7 +77,7 @@ menu_ctrl_st menu_ctrl =
 
 BtnPinOnOff  menu_btn[NBR_MENU_KEYS];
 
-extern TFT_eSPI tft;
+
 
 void menu_initialize(void)
 {
@@ -91,12 +93,12 @@ void menu_draw(void)
 {
 
     tft.setTextSize(1);
-    tft.setTextColor(TFT_WHITE, TFT_MAROON, true);
-    tft.fillRect(menu_box[0].x_pos, menu_box[0].y_pos, menu_box[0].width, menu_box[0].height, TFT_MAROON);
+    tft.setTextColor(TFT_WHITE, TFT_DARKCYAN, false);
+    tft.fillRect(menu_box[0].x_pos, menu_box[0].y_pos, menu_box[0].width, menu_box[0].height, TFT_DARKCYAN);
     tft.drawString( menu[menu_ctrl.active].row_label, menu_box[0].x_pos+4, menu_box[0].y_pos, 2);
 
     tft.setTextSize(1);
-    tft.setTextColor(TFT_WHITE, TFT_DARKCYAN, true);
+    tft.setTextColor(TFT_WHITE, TFT_DARKCYAN, false);
     for (uint8_t i = 1; i <= 3; i++)
     {
         tft.fillRoundRect(menu_box[i].x_pos, menu_box[i].y_pos, menu_box[i].width, menu_box[i].height, 5, TFT_DARKCYAN);
