@@ -10,7 +10,8 @@
 #define UNIT_LEN    6
 #define TXT_LEN     40
 
-#define APP_NAME   "T2312_PicoConsol"
+#define APP_NAME   "T2312_PicoConsole"
+#define MAIN_TITLE "Villa Astrid Console"
 
 typedef enum 
 {

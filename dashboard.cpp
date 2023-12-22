@@ -125,7 +125,8 @@ void dashboard_show_info(void)
 void dashboard_show_common(void)
 {
     String time_str;
-
+    strcpy(db_box[2].txt, MAIN_TITLE);
+    dashboard_draw_box(2);
     time_to_string(&time_str);
     time_str.toCharArray(db_box[3].txt, TXT_LEN);
     dashboard_draw_box(3);
