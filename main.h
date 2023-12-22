@@ -26,13 +26,6 @@ typedef enum
   AIO_PUBL_NBR_OF
 } aio_publ_et;
 
-typedef struct
-{
-  char label[LABEL_LEN];
-  char unit[UNIT_LEN];
-  float value ;
-  bool  updated;
-} value_st;
 
 typedef struct
 {

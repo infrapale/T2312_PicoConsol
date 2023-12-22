@@ -50,6 +50,7 @@ WiFiClient client;
 #define AIO_KEY         IO_KEY
 #define AIO_PUBLISH_INTERVAL_ms  60000
 
+
 // RTC_PCF8563 rtc;
 
 Adafruit_MQTT_Client aio_mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
@@ -68,12 +69,6 @@ Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
 {
   [AIO_PUBL_VA_HOME_MODE] = &villa_astrid_home_mode,
   [AIO_PUBL_VA_AC_TEMP]  = &villa_astrid_home_mode
-};
-
-value_st subs_data[AIO_SUBS_NBR_OF]
-{
-  [AIO_SUBS_VA_OD_TEMP] = {"VA OD Temp ", " C", 0.0},
-  [AIO_SUBS_VA_OD_HUM]  = {"VA OD Hum ",  " kPa", 0.0}
 };
 
 

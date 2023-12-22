@@ -24,6 +24,7 @@ bool time_begin(void)
   {
     ret = true;
     time_lost_power(true);
+    rtc.start();
     time_print();
   }
   return ret;
@@ -50,7 +51,6 @@ void time_lost_power(bool force_new_time)
     // When the RTC was stopped and stays connected to the battery, it has
     // to be restarted by clearing the STOP bit. Let's do this to ensure
     // the RTC is running.
-    rtc.start();
   }
 
 }
@@ -64,7 +64,8 @@ DateTime *time_get_time_now(void)
 
 void time_to_string(String *Str)
 {
-   DateTime now = rtc.now();
+  DateTime now = rtc.now();
+  char s[4];
 
   *Str = String("");
   *Str += now.year();
@@ -73,12 +74,15 @@ void time_to_string(String *Str)
   *Str += String("-");
   *Str += now.day();
   *Str += String(" ");
-  *Str += now.hour();
-  *Str += String(":");
-  *Str += now.minute();
-  *Str += String(":");
-  *Str += now.second();
-  *Str += String(":");
+
+  sprintf(s,"%02d",now.hour());
+  *Str += s;
+  *Str += ":";
+  sprintf(s,"%02d",now.minute());
+  *Str += s;
+  *Str += ":";
+  sprintf(s,"%02d",now.second());
+  *Str += s;
 }
 
 uint32_t time_get_epoc_time(void)
