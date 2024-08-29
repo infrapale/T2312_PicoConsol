@@ -2,6 +2,8 @@
 #include "main.h"
 #include "dashboard.h"
 #include "time.h"
+#include "RTClib.h"
+#include "aio_mqtt.h"
 
 #define NBR_BOXES           7
 
@@ -54,8 +56,8 @@ char measure_label[NBR_UNITS][MEASURE_LABEL_LEN] =
 
 value_st subs_data[AIO_SUBS_NBR_OF]
 {
-  [AIO_SUBS_VA_OD_TEMP] = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0},
-  [AIO_SUBS_VA_OD_HUM]  = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0}
+  [AIO_SUBS_TRE_ID_TEMP] = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0},
+  [AIO_SUBS_TRE_ID_HUM]  = {ZONE_TAMPERE, "ID ",  UNIT_HUMIDITY, 0.0}
 };
 
 
@@ -136,16 +138,17 @@ void dashboard_clear(void)
 {
 
 }
-void dashboard_update_task(void *param)
+
+
+void dashboard_update_task(void)
 {
-    (void) param;
     uint8_t state = 0;
     uint16_t v_delay_ms = 1000;
     bool    update_box;
     String  Str;
 
-    vTaskDelay( 5000 / portTICK_PERIOD_MS );
-    for (;;)
+    // vTaskDelay( 5000 / portTICK_PERIOD_MS );
+    /// for (;;)
     {
         //Serial.print("dashboard_update_task state: "); Serial.println(state);
         switch (state)
@@ -163,7 +166,7 @@ void dashboard_update_task(void *param)
                 break;
             case 2:
                 update_box = false;
-                for (uint8_t i = AIO_SUBS_VA_OD_TEMP; (i < AIO_SUBS_NBR_OF) && !update_box; i++ )
+                for (uint8_t i = AIO_SUBS_TRE_ID_TEMP; (i < AIO_SUBS_NBR_OF) && !update_box; i++ )
                 {
                     if (subs_data[i].updated)
                     {
@@ -172,7 +175,7 @@ void dashboard_update_task(void *param)
                         subs_data[i].updated = false;
                         switch(i)
                         {
-                            case AIO_SUBS_VA_OD_TEMP:
+                            case AIO_SUBS_TRE_ID_TEMP:
                               Str = zone_main_label[subs_data[i].main_zone_index];
                               Str += " ";
                               Str += subs_data[i].sub_zone;
@@ -188,7 +191,7 @@ void dashboard_update_task(void *param)
                               Str.toCharArray(db_box[1].txt,6);
                               update_box = true;
                               break;
-                            case AIO_SUBS_VA_OD_HUM:
+                            case AIO_SUBS_TRE_ID_HUM:
                               break;
                         }
                         if (update_box)
@@ -206,7 +209,7 @@ void dashboard_update_task(void *param)
                 break;
 
         }
-        vTaskDelay( v_delay_ms / portTICK_PERIOD_MS );
+        // vTaskDelay( v_delay_ms / portTICK_PERIOD_MS );
     }
 
 

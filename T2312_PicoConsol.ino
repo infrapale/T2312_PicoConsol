@@ -2,8 +2,13 @@
 @title T2312_PicoConsol.ino
 @git  	https://github.com/infrapale/T2312_PicoConsol
 
+https://github.com/adafruit/Adafruit_MQTT_Library
+
+
 https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial1-creating-freertos-task-to-blink-led-in-arduino-uno
 https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial-using-semaphore-and-mutex-in-freertos-with-arduino
+
+https://learn.adafruit.com/dvi-io/code-the-dashboard
 
 
 
@@ -54,15 +59,19 @@ WiFiClient client;
 // RTC_PCF8563 rtc;
 
 Adafruit_MQTT_Client aio_mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
-Adafruit_MQTT_Publish villa_astrid_home_mode   = Adafruit_MQTT_Publish(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.astrid-mode");
-Adafruit_MQTT_Subscribe villa_astrid_od_temp = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-temp");
-Adafruit_MQTT_Subscribe villa_astrid_od_hum  = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-hum");
-
+Adafruit_MQTT_Publish villa_astrid_home_mode    = Adafruit_MQTT_Publish(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.astrid-mode");
+Adafruit_MQTT_Subscribe villa_astrid_od_temp    = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-temp");
+Adafruit_MQTT_Subscribe villa_astrid_od_hum     = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-hum");
+Adafruit_MQTT_Subscribe tre_id_temp             = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tampere-indoor-temperature");
+Adafruit_MQTT_Subscribe tre_id_hum              = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tre-indoor-humidity");
+//infrapale/feeds/home-tampere.tampere-indoor-temperature
 
 Adafruit_MQTT_Subscribe *aio_subs[AIO_SUBS_NBR_OF] =
 {
   [AIO_SUBS_VA_OD_TEMP] = &villa_astrid_od_temp,
-  [AIO_SUBS_VA_OD_HUM]  = &villa_astrid_od_hum
+  [AIO_SUBS_VA_OD_HUM]  = &villa_astrid_od_hum,
+  [AIO_SUBS_TRE_ID_TEMP] = &tre_id_temp,
+  [AIO_SUBS_TRE_ID_HUM]  = &tre_id_hum,
 };
 
 Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =

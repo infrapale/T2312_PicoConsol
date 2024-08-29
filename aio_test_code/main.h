@@ -1,10 +1,15 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 #define BOARD_PICO_TFT_4KEYS
+
 #include <board.h>
-#include <FreeRTOS.h>
+//#include <FreeRTOS.h>
 #include <task.h>
-#include <semphr.h>
+//#include <semphr.h>
+
+// the on off button feed turns this LED on/off
+//#define LED_BUILTIN 25  
+// the slider feed sets the PWM output of this pin
 
 #define LABEL_LEN   12
 #define UNIT_LEN    6
@@ -13,21 +18,12 @@
 #define APP_NAME   "T2312_PicoConsole"
 #define MAIN_TITLE "Villa Astrid Console"
 
-typedef enum 
+typedef enum
 {
-  AIO_SUBS_VA_OD_TEMP = 0,
-  AIO_SUBS_VA_OD_HUM,
-  AIO_SUBS_TRE_ID_TEMP,
-  AIO_SUBS_TRE_ID_HUM,   
-  AIO_SUBS_NBR_OF
-} aio_subs_et;
-
-typedef enum 
-{
-  AIO_PUBL_VA_HOME_MODE = 0,
-  AIO_PUBL_VA_AC_TEMP,
-  AIO_PUBL_NBR_OF
-} aio_publ_et;
+    TASK_SCAN_KEY   = 0,
+    TASK_DASHBOARD,
+    TASK_NBR_OF
+} task_et;
 
 
 typedef struct
@@ -44,6 +40,7 @@ typedef struct
     uint16_t text_color;
 
 } disp_box_st;
+
 
 
 #endif

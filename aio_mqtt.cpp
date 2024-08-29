@@ -19,10 +19,11 @@
 
 typedef struct 
 {
-  int8_t  connected;
-  uint8_t state;
-  uint16_t conn_faults;
-  uint8_t at_home;
+  int8_t      connected;
+  uint8_t     state;
+  aio_subs_et subs_indx;
+  uint16_t    conn_faults;
+  uint8_t     at_home;
 
 } aio_mqtt_ctrl_st;
 
@@ -30,6 +31,7 @@ aio_mqtt_ctrl_st aio_mqtt_ctrl =
 {
   .connected = false,
   .state = 0,
+  .subs_indx = AIO_SUBS_VA_OD_TEMP,
   .conn_faults = 0,
   .at_home = 0,
 };
@@ -98,6 +100,7 @@ void aio_mqtt_stm(void *param)
           // Serial.println(F("\nWiFi connected"));
           // Serial.println(F("IP address: "));
           // Serial.println(WiFi.localIP());
+          aio_mqtt_ctrl.subs_indx = AIO_SUBS_TRE_ID_TEMP;
           aio_mqtt_ctrl.state++;
           break;
         case 1:
@@ -110,22 +113,25 @@ void aio_mqtt_stm(void *param)
           break;
         case 2:   
           Serial.print(F("Subscribe: "));
-          Serial.println(aio_subs[AIO_SUBS_VA_OD_TEMP]->topic);
-
-          aio_mqtt.subscribe(aio_subs[AIO_SUBS_VA_OD_TEMP]);
+          Serial.println(aio_subs[aio_mqtt_ctrl.subs_indx]->topic);
+          aio_mqtt.subscribe(aio_subs[AIO_SUBS_TRE_ID_TEMP]);
           aio_mqtt_ctrl.state++;
           break;
         case 3:
           Serial.print(F("Read Subscription\n"));
           time_to_string(&time_str);
           Serial.println(time_str);
-          while ((aio_subscription = aio_mqtt.readSubscription(500))) 
+          while ((aio_subscription = aio_mqtt.readSubscription(5000))) 
           {
+              Serial.print("O");
               Serial.println(aio_subscription->topic);
-              for (uint8_t sindx = AIO_SUBS_VA_OD_TEMP; sindx < AIO_SUBS_NBR_OF; sindx++ )
+              uint8_t sindx = AIO_SUBS_TRE_ID_TEMP;
+              // for (uint8_t sindx = AIO_SUBS_TRE_ID_TEMP; sindx < AIO_SUBS_NBR_OF; sindx++ )
               {
+
                   if (aio_subscription == aio_subs[sindx]) 
                   {
+                      Serial.print(F("!!! Match !!!  aio subs topic: "));
                       Serial.print(aio_subs[sindx]->topic);
                       Serial.print(F(": "));
                       value_str = (char*)aio_subs[sindx]->lastread;
@@ -141,7 +147,15 @@ void aio_mqtt_stm(void *param)
                   }                  
               }
           }
-          aio_mqtt_ctrl.state++;
+          /// TODO
+          aio_mqtt_ctrl.subs_indx = AIO_SUBS_TRE_ID_TEMP;
+          if(! aio_mqtt.ping()) 
+          {
+            aio_mqtt.disconnect();
+            aio_mqtt_ctrl.state = 1;
+          }
+
+          // aio_mqtt_ctrl.state++;
           break;
         case 4:
             if (! aio_publ[AIO_PUBL_VA_HOME_MODE]->publish((float)aio_mqtt_ctrl.at_home)) 
