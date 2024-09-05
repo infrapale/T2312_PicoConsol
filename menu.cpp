@@ -1,7 +1,7 @@
 
 #include "main.h"
 #include "menu.h"
-
+#include "atask.h"
 #include "BtnPinOnOff.h"
 
 #define NBR_MENU_KEYS  4
@@ -70,12 +70,14 @@ menu_box_st menu_box[4] =
     { 216, 200, 100, 32, NULL},  
 };
 
-menu_ctrl_st menu_ctrl =
-{
-    .active = MENU_MAIN
-};
+menu_ctrl_st menu_ctrl = {ATASK_NOT_DEFINED,  MENU_MAIN};
 
 BtnPinOnOff  menu_btn[NBR_MENU_KEYS];
+
+void menu_read_machine(void);
+
+//                                  123456789012345   ival  next  state  prev  cntr flag  call backup
+atask_st menu_key_task_handle =   {"Menu Key Task  ", 100,    0,     0,  255,    0,   1, menu_read_machine };
 
 
 
@@ -86,8 +88,24 @@ void menu_initialize(void)
   menu_btn[2].Init(PIN_KEY3,'1', true);
   menu_btn[3].Init(PIN_KEY_STATUS,'0', false);
 
+  atask_add_new(&menu_key_task_handle);
 }
 
+void menu_read_machine(void)
+{
+  char c = menu_read_button();
+  if (c != 0x00) 
+  {
+      if ((c & 0b10000000) == 0) 
+          Serial.printf("On");
+      else 
+          Serial.printf("Off");
+      Serial.printf(" %c\n",c & 0b01111111);
+      c &=  0b01111111;
+      menu_btn_pressed(c);
+  }
+
+}
 
 void menu_draw(void)
 {

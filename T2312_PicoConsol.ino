@@ -37,6 +37,7 @@ https://learn.adafruit.com/dvi-io/code-the-dashboard
 #include <Wire.h>
 #include "RTClib.h"
 #include "time.h"
+#include "atask.h"
 #include "aio_mqtt.h"
 #include "log.h"
 #include "dashboard.h"
@@ -80,6 +81,16 @@ Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
   [AIO_PUBL_VA_AC_TEMP]  = &villa_astrid_home_mode
 };
 
+void print_debug_task(void)
+{
+  atask_print_status(true);
+}
+
+//                                  123456789012345   ival  next  state  prev  cntr flag  call backup
+atask_st debug_task_handle    =   {"Debug Task     ", 5000,    0,     0,  255,    0,  1,  print_debug_task };
+atask_st btn_scan_handle      =   {"Button Scan    ", 10,      0,     0,  255,    0,  1,  menu_button_scan };
+
+
 
 
 unsigned long     targetTime = 0; // Used for testing draw times
@@ -109,7 +120,10 @@ void setup(void) {
       //Watchdog.reset();
   }
   //Watchdog.reset();
-
+  
+  atask_initialize();
+  atask_add_new(&debug_task_handle);
+  atask_add_new(&btn_scan_handle);
 
   mutex_v = xSemaphoreCreateMutex(); 
   if (mutex_v == NULL) 
@@ -117,7 +131,9 @@ void setup(void) {
     Serial.println("Mutex can not be created"); 
   } 
   
-  xTaskCreate(aio_mqtt_stm,"AIO_MQTT",4*4096,nullptr,1,nullptr);
+  aio_mqtt_initialize();
+  //xTaskCreate(aio_mqtt_stm,"AIO_MQTT",4*4096,nullptr,1,nullptr);
+  
   xTaskCreate(dashboard_update_task,"Dashboard",1024,nullptr,1,nullptr);
   sema_v = xSemaphoreCreateBinary();
 
@@ -141,18 +157,7 @@ void setup1()
 }
 
 void loop() {
-  char c = menu_read_button();
-  if (c != 0x00) 
-  {
-      if ((c & 0b10000000) == 0) 
-          Serial.printf("On");
-      else 
-          Serial.printf("Off");
-      Serial.printf(" %c\n",c & 0b01111111);
-      c &=  0b01111111;
-      menu_btn_pressed(c);
-  }
-  delay(100);
+  atask_run();
 }
 
 void loop1()

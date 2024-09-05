@@ -16,6 +16,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t atask;
     uint8_t active;
 } menu_ctrl_st;
 

@@ -13,14 +13,16 @@
 #include "main.h"
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
+#include "aio_mqtt.h"
+#include "atask.h"
 #include "time.h"
 #include "log.h"
 #include "dashboard.h"
 
 typedef struct 
 {
+  uint8_t     aindx;
   int8_t      connected;
-  uint8_t     state;
   aio_subs_et subs_indx;
   uint16_t    conn_faults;
   uint8_t     at_home;
@@ -30,19 +32,29 @@ typedef struct
 aio_mqtt_ctrl_st aio_mqtt_ctrl =
 {
   .connected = false,
-  .state = 0,
   .subs_indx = AIO_SUBS_VA_OD_TEMP,
   .conn_faults = 0,
   .at_home = 0,
 };
 
+
+
 extern Adafruit_MQTT_Subscribe *aio_subs[];
 extern Adafruit_MQTT_Publish *aio_publ[];
 extern Adafruit_MQTT_Client aio_mqtt;
-
 extern value_st subs_data[];
 
+//                                  123456789012345   ival  next  state  prev  cntr flag  call backup
+atask_st aio_mqtt_task        =   {"AIO MQTT SM    ", 1000,   0,     0,  255,    0,   1, aio_mqtt_stm };
+
+//  xTaskCreate(aio_mqtt_stm,"AIO_MQTT",4*4096,nullptr,1,nullptr);
+
 Adafruit_MQTT_Subscribe *aio_subscription;
+
+void aio_mqtt_initialize(void)
+{
+    aio_mqtt_ctrl.aindx = atask_add_new(&aio_mqtt_task);
+}
 
 
 
@@ -78,9 +90,8 @@ int8_t aio_mqtt_connect() {
 
 
 
-void aio_mqtt_stm(void *param)
+void aio_mqtt_stm(void)
 {
-    (void) param;
     uint16_t v_delay_ms = 5000 ;
     String time_str; 
     String value_str;
@@ -88,36 +99,39 @@ void aio_mqtt_stm(void *param)
     uint32_t unix_time;
 
     // Serial.println(F("aio_mqtt_stm - init"));
-    while(true)
+    //while(true)
     {
-      unix_time = time_get_epoc_time();
       // Serial.print(F("aio_mqtt_stm - while "));
       // Serial.println(state);
-      switch(aio_mqtt_ctrl.state)
+      switch(aio_mqtt_task.state)
       {
         case 0:
+          unix_time = time_get_epoc_time();
+          aio_mqtt_task.state = 10;
+          break;
+        case 10:  
           Serial.println(F("Initializing AIO MQTT"));
           // Serial.println(F("\nWiFi connected"));
           // Serial.println(F("IP address: "));
           // Serial.println(WiFi.localIP());
           aio_mqtt_ctrl.subs_indx = AIO_SUBS_TRE_ID_TEMP;
-          aio_mqtt_ctrl.state++;
+          aio_mqtt_task.state = 20;
           break;
-        case 1:
+        case 20:
           aio_mqtt_ctrl.connected =  aio_mqtt_connect();
           if (aio_mqtt_ctrl.connected == 0) 
           {
-            aio_mqtt_ctrl.state++;
+            aio_mqtt_task.state = 30;
             aio_mqtt_ctrl.conn_faults = 0;
           }
           break;
-        case 2:   
+        case 30:   
           Serial.print(F("Subscribe: "));
           Serial.println(aio_subs[aio_mqtt_ctrl.subs_indx]->topic);
           aio_mqtt.subscribe(aio_subs[AIO_SUBS_TRE_ID_TEMP]);
-          aio_mqtt_ctrl.state++;
+          aio_mqtt_task.state = 40;
           break;
-        case 3:
+        case 40:
           Serial.print(F("Read Subscription\n"));
           time_to_string(&time_str);
           Serial.println(time_str);
@@ -129,7 +143,7 @@ void aio_mqtt_stm(void *param)
               // for (uint8_t sindx = AIO_SUBS_TRE_ID_TEMP; sindx < AIO_SUBS_NBR_OF; sindx++ )
               {
 
-                  if (aio_subscription == aio_subs[sindx]) 
+                  //if (aio_subscription == aio_subs[sindx]) 
                   {
                       Serial.print(F("!!! Match !!!  aio subs topic: "));
                       Serial.print(aio_subs[sindx]->topic);
@@ -151,13 +165,15 @@ void aio_mqtt_stm(void *param)
           aio_mqtt_ctrl.subs_indx = AIO_SUBS_TRE_ID_TEMP;
           if(! aio_mqtt.ping()) 
           {
+            Serial.println("No ping");
             aio_mqtt.disconnect();
-            aio_mqtt_ctrl.state = 1;
+            aio_mqtt_task.state = 10;
           }
+          else Serial.println("Ping OK");
 
           // aio_mqtt_ctrl.state++;
           break;
-        case 4:
+        case 100:
             if (! aio_publ[AIO_PUBL_VA_HOME_MODE]->publish((float)aio_mqtt_ctrl.at_home)) 
             {
               Serial.println(F("Publish Failed"));
@@ -167,18 +183,16 @@ void aio_mqtt_stm(void *param)
             }
             if (aio_mqtt_ctrl.at_home > 0) aio_mqtt_ctrl.at_home = 0;
             else aio_mqtt_ctrl.at_home = 1;
-            aio_mqtt_ctrl.state = 1;
+            aio_mqtt_task.state = 10;
           break;
-        case 5:
+        case 500:
           break;
-        case 6:
+        case 600:
           break;
-        case 7:
-          break;
-        case 8:
-          break;
-
+        default:
+          Serial.print(F("AIO_MQTT incorrect state:"));
+          Serial.println(aio_mqtt_task.state);
       }
-      vTaskDelay( v_delay_ms / portTICK_PERIOD_MS );
+      //vTaskDelay( v_delay_ms / portTICK_PERIOD_MS );
     }
 }

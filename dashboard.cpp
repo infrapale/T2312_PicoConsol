@@ -5,13 +5,26 @@
 
 #define NBR_BOXES           7
 
+typedef enum
+{
+  BOX_UPPER_LARGE = 0,
+  BOX_MID_LARGE,
+  BOX_ROW_1,
+  BOX_ROW_2,
+  BOX_ROW_3,
+  BOX_ROW_4,
+  BOX_LOW_AREA,
+  BOX_NBR_OF
+} boxes_et;
 
-extern value_st subs_data[];
+
+// extern value_st subs_data[];
 
 extern TFT_eSPI tft;
 
-disp_box_st db_box[NBR_BOXES] =
+disp_box_st db_box[BOX_NBR_OF] =
 {
+  // x    y    w    h   label  fon f  fill color  border color  text color
   {  0,   0, 319, 172, "Box 0", 4, 1, TFT_BLACK, TFT_LIGHTGREY, TFT_LIGHTGREY },
   {  0,  72, 319,  80, "Box 1", 8, 1, TFT_BLACK, TFT_GOLD, TFT_GOLD },
   {  0,   0, 319,  32, "Box 2", 4, 1, TFT_BLACK, TFT_GOLD, TFT_WHITE },
@@ -20,6 +33,7 @@ disp_box_st db_box[NBR_BOXES] =
   {  0,  96, 319,  32, "Box 5", 4, 1, TFT_BLACK, TFT_GOLD, TFT_WHITE},
   {  0,  90, 319,  90, "Box 6", 8, 1, TFT_BLACK, TFT_VIOLET, TFT_GOLD },
 };
+
 
 
 char zone_main_label[NBR_MAIN_ZONES][MAIN_ZONE_LABEL_LEN] =
@@ -54,8 +68,10 @@ char measure_label[NBR_UNITS][MEASURE_LABEL_LEN] =
 
 value_st subs_data[AIO_SUBS_NBR_OF]
 {
-  [AIO_SUBS_VA_OD_TEMP] = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0},
-  [AIO_SUBS_VA_OD_HUM]  = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0}
+  [AIO_SUBS_VA_OD_TEMP]   = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0},
+  [AIO_SUBS_VA_OD_HUM]    = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0},
+  [AIO_SUBS_TRE_ID_TEMP]  = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0},
+  [AIO_SUBS_TRE_ID_HUM]   = {ZONE_TAMPERE, "ID ",  UNIT_HUMIDITY, 0.0},
 };
 
 
@@ -86,7 +102,7 @@ void dashboard_big_time(void)
     DateTime *now = time_get_time_now();
     char s1[4];
     
-    db_box[4].txt[0] = 0x00;
+    db_box[BOX_ROW_3].txt[0] = 0x00;
     dashboard_draw_box(4);
  
     sprintf(s1,"%02d",now->hour());
@@ -94,8 +110,7 @@ void dashboard_big_time(void)
     time_str += ":";
     sprintf(s1,"%02d",now->minute());
     time_str += s1;
-    time_str.toCharArray(db_box[1].txt, TXT_LEN);
-    //Serial.println(db_box[1].txt);
+    time_str.toCharArray(db_box[BOX_MID_LARGE].txt, TXT_LEN);
     dashboard_draw_box(1);
 }
 
@@ -106,17 +121,17 @@ void dashboard_show_info(void)
     Str_info += __DATE__;
     Str_info += __TIME__;
 
-    strcpy(db_box[0].txt, " ");
-    dashboard_draw_box(0);
+    strcpy(db_box[BOX_UPPER_LARGE].txt, " ");
+    dashboard_draw_box(BOX_UPPER_LARGE);
  
-    strcpy(db_box[2].txt, APP_NAME);
-    dashboard_draw_box(2);
+    strcpy(db_box[BOX_ROW_1].txt, APP_NAME);
+    dashboard_draw_box(BOX_ROW_1);
 
-    strcpy(db_box[3].txt, __DATE__);
-    dashboard_draw_box(3);
+    strcpy(db_box[BOX_ROW_2].txt, __DATE__);
+    dashboard_draw_box(BOX_ROW_2);
 
-    strcpy(db_box[4].txt, __TIME__);
-    dashboard_draw_box(4);
+    strcpy(db_box[BOX_ROW_3].txt, __TIME__);
+    dashboard_draw_box(BOX_ROW_3);
 
     // Str_info.toCharArray(db_box[0].txt, TXT_LEN);
 
@@ -125,11 +140,11 @@ void dashboard_show_info(void)
 void dashboard_show_common(void)
 {
     String time_str;
-    strcpy(db_box[2].txt, MAIN_TITLE);
-    dashboard_draw_box(2);
+    strcpy(db_box[BOX_ROW_1].txt, MAIN_TITLE);
+    dashboard_draw_box(BOX_ROW_1);
     time_to_string(&time_str);
-    time_str.toCharArray(db_box[3].txt, TXT_LEN);
-    dashboard_draw_box(3);
+    time_str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
+    dashboard_draw_box(BOX_ROW_2);
 }
 
 void dashboard_clear(void)
@@ -172,20 +187,20 @@ void dashboard_update_task(void *param)
                         subs_data[i].updated = false;
                         switch(i)
                         {
-                            case AIO_SUBS_VA_OD_TEMP:
+                            case AIO_SUBS_TRE_ID_TEMP:
                               Str = zone_main_label[subs_data[i].main_zone_index];
                               Str += " ";
                               Str += subs_data[i].sub_zone;
-                              Str.toCharArray(db_box[2].txt,40);
+                              Str.toCharArray(db_box[BOX_ROW_1].txt,40);
 
                               Str = measure_label[subs_data[i].unit_index];
                               Str += " ";
                               Str += unit_label[subs_data[i].unit_index];
-                              Str.toCharArray(db_box[3].txt, TXT_LEN);
+                              Str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
 
                               Str = String(subs_data[i].value);
                               //Serial.println(Str);
-                              Str.toCharArray(db_box[1].txt,6);
+                              Str.toCharArray(db_box[BOX_MID_LARGE].txt,6);
                               update_box = true;
                               break;
                             case AIO_SUBS_VA_OD_HUM:
@@ -193,10 +208,10 @@ void dashboard_update_task(void *param)
                         }
                         if (update_box)
                         {
-                            dashboard_draw_box(0);
-                            dashboard_draw_box(1);
-                            dashboard_draw_box(2);
-                            dashboard_draw_box(3);
+                            dashboard_draw_box(BOX_UPPER_LARGE);
+                            dashboard_draw_box(BOX_MID_LARGE);
+                            dashboard_draw_box(BOX_ROW_1);
+                            dashboard_draw_box(BOX_ROW_2);
                         }
                     }
                 }
