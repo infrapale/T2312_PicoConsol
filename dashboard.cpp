@@ -1,7 +1,9 @@
 #include "SerialUSB.h"
 #include "main.h"
 #include "dashboard.h"
+#include "aio_mqtt.h"
 #include "time.h"
+#include "atask.h"
 
 #define NBR_BOXES           7
 
@@ -21,6 +23,7 @@ typedef enum
 // extern value_st subs_data[];
 
 extern TFT_eSPI tft;
+extern value_st subs_data[AIO_SUBS_NBR_OF];
 
 disp_box_st db_box[BOX_NBR_OF] =
 {
@@ -66,14 +69,15 @@ char measure_label[NBR_UNITS][MEASURE_LABEL_LEN] =
     "LDR Value      "
 };
 
-value_st subs_data[AIO_SUBS_NBR_OF]
-{
-  [AIO_SUBS_VA_OD_TEMP]   = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0},
-  [AIO_SUBS_VA_OD_HUM]    = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0},
-  [AIO_SUBS_TRE_ID_TEMP]  = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0},
-  [AIO_SUBS_TRE_ID_HUM]   = {ZONE_TAMPERE, "ID ",  UNIT_HUMIDITY, 0.0},
-};
 
+//                                          123456789012345   ival  next  state  prev  cntr flag  call backup
+atask_st dashboard_task_handle        =   {"Dashboard SM   ", 1000,   0,     0,  255,    0,   1,  dashboard_update_task };
+
+
+void dashboard_initialize(void)
+{
+    atask_add_new(&dashboard_task_handle);
+}
 
 void dashboard_draw_box(uint8_t bindx)
 {
@@ -151,36 +155,32 @@ void dashboard_clear(void)
 {
 
 }
-void dashboard_update_task(void *param)
+void dashboard_update_task()
 {
-    (void) param;
-    uint8_t state = 0;
     uint16_t v_delay_ms = 1000;
     bool    update_box;
     String  Str;
 
-    vTaskDelay( 5000 / portTICK_PERIOD_MS );
-    for (;;)
     {
         //Serial.print("dashboard_update_task state: "); Serial.println(state);
-        switch (state)
+        switch (dashboard_task_handle.state)
         {
             case 0:
                 dashboard_show_info();
                 v_delay_ms = 10000;
-                state++;
+                dashboard_task_handle.state++;
                 break;
             case 1:                
                 dashboard_show_common();
                 dashboard_big_time();
                 v_delay_ms = 5000;
-                state++;
+                dashboard_task_handle.state++;
                 break;
             case 2:
                 update_box = false;
                 for (uint8_t i = AIO_SUBS_VA_OD_TEMP; (i < AIO_SUBS_NBR_OF) && !update_box; i++ )
                 {
-                    if (subs_data[i].updated)
+                    if ( subs_data[i].updated)
                     {
                         Serial.print("aio index: "); Serial.print(i); 
                         Serial.println(" = Updated ");
@@ -215,13 +215,10 @@ void dashboard_update_task(void *param)
                         }
                     }
                 }
-                v_delay_ms = 5000;
-                state = 1;
-
+                dashboard_task_handle.state = 1;
                 break;
 
         }
-        vTaskDelay( v_delay_ms / portTICK_PERIOD_MS );
     }
 
 

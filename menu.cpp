@@ -78,7 +78,7 @@ void menu_read_machine(void);
 
 //                                  123456789012345   ival  next  state  prev  cntr flag  call backup
 atask_st menu_key_task_handle =   {"Menu Key Task  ", 100,    0,     0,  255,    0,   1, menu_read_machine };
-
+atask_st menu_key_scan_handle =   {"Menu Key Scan  ", 10,     0,     0,  255,    0,   1, menu_button_scan };
 
 
 void menu_initialize(void)
@@ -89,6 +89,7 @@ void menu_initialize(void)
   menu_btn[3].Init(PIN_KEY_STATUS,'0', false);
 
   atask_add_new(&menu_key_task_handle);
+  atask_add_new(&menu_key_scan_handle);
 }
 
 void menu_read_machine(void)

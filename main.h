@@ -1,26 +1,35 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
+
+
 #define BOARD_PICO_TFT_4KEYS
+#define PIRPANA
+//#define LILLA_ASTRID
+//#define VILLA_ASTRID
+
 #include <board.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
 
-#define LABEL_LEN   12
-#define UNIT_LEN    6
-#define TXT_LEN     40
+#define LABEL_LEN           12
+#define UNIT_LEN            6
+#define TXT_LEN             40
+#define TIME_ZONE_OFFS      3
+
+#define NBR_MAIN_ZONES      4
+#define NBR_SUB_ZONES       20
+#define NBR_UNITS           5
+#define MAIN_ZONE_LABEL_LEN 16
+#define SUB_ZONE_LABEL_LEN  20
+#define UNIT_LABEL_LEN      10
+#define MEASURE_LABEL_LEN   16
+
+
 
 #define APP_NAME   "T2312_PicoConsole"
 #define MAIN_TITLE "Villa Astrid Console"
 
-typedef enum 
-{
-  AIO_SUBS_VA_OD_TEMP = 0,
-  AIO_SUBS_VA_OD_HUM,
-  AIO_SUBS_TRE_ID_TEMP,
-  AIO_SUBS_TRE_ID_HUM,   
-  AIO_SUBS_NBR_OF
-} aio_subs_et;
 
 typedef enum 
 {
@@ -28,6 +37,24 @@ typedef enum
   AIO_PUBL_VA_AC_TEMP,
   AIO_PUBL_NBR_OF
 } aio_publ_et;
+
+
+typedef enum
+{
+    ZONE_VILLA_ASTRID = 0,
+    ZONE_LILLA_ASTRID,
+    ZONE_LAITURI,
+    ZONE_TAMPERE
+} main_zone_et;
+
+typedef enum
+{
+    UNIT_TEMPERATURE = 0,
+    UNIT_HUMIDITY,
+    UNIT_AIR_PRESSURE,
+    UNIT_LIGHT,
+    UNIT_LDR
+} unit_et;
 
 
 typedef struct
@@ -45,5 +72,14 @@ typedef struct
 
 } disp_box_st;
 
+typedef struct date_time
+{
+    uint16_t  year;
+    uint8_t   month;
+    uint8_t   day;
+    uint8_t   hour;
+    uint8_t   minute;
+    uint8_t   second;
+ } date_time_st;
 
 #endif

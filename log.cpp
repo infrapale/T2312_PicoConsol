@@ -1,6 +1,7 @@
 
 #include  "main.h"
 #include  "time.h"
+#include  "aio_mqtt.h"
 #include  "log.h"
 
 #define  SUBS_LEN    (64u)

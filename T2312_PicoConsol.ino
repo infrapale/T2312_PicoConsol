@@ -19,9 +19,6 @@ https://learn.adafruit.com/dvi-io/code-the-dashboard
  
 // Pause in milliseconds between screens, change to 0 to time font rendering
 #define WAIT 1000
-#define PIRPANA
-//#define LILLA_ASTRID
-//#define VILLA_ASTRID
 
 #define PIN_WIRE_SDA         (12u)
 #define PIN_WIRE_SCL         (13u)
@@ -47,39 +44,7 @@ TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 // WiFi parameters
 #define WLAN_SSID       WIFI_SSID
 #define WLAN_PASS       WIFI_PASS
-WiFiClient client;
 
-// Adafruit IO
-#define AIO_SERVER      "io.adafruit.com"
-#define AIO_SERVERPORT  1883
-#define AIO_USERNAME    IO_USERNAME
-#define AIO_KEY         IO_KEY
-#define AIO_PUBLISH_INTERVAL_ms  60000
-
-
-// RTC_PCF8563 rtc;
-
-Adafruit_MQTT_Client aio_mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
-Adafruit_MQTT_Publish villa_astrid_home_mode    = Adafruit_MQTT_Publish(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.astrid-mode");
-Adafruit_MQTT_Subscribe villa_astrid_od_temp    = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-temp");
-Adafruit_MQTT_Subscribe villa_astrid_od_hum     = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-hum");
-Adafruit_MQTT_Subscribe tre_id_temp             = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tampere-indoor-temperature");
-Adafruit_MQTT_Subscribe tre_id_hum              = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tre-indoor-humidity");
-//infrapale/feeds/home-tampere.tampere-indoor-temperature
-
-Adafruit_MQTT_Subscribe *aio_subs[AIO_SUBS_NBR_OF] =
-{
-  [AIO_SUBS_VA_OD_TEMP] = &villa_astrid_od_temp,
-  [AIO_SUBS_VA_OD_HUM]  = &villa_astrid_od_hum,
-  [AIO_SUBS_TRE_ID_TEMP] = &tre_id_temp,
-  [AIO_SUBS_TRE_ID_HUM]  = &tre_id_hum,
-};
-
-Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
-{
-  [AIO_PUBL_VA_HOME_MODE] = &villa_astrid_home_mode,
-  [AIO_PUBL_VA_AC_TEMP]  = &villa_astrid_home_mode
-};
 
 void print_debug_task(void)
 {
@@ -87,13 +52,10 @@ void print_debug_task(void)
 }
 
 //                                  123456789012345   ival  next  state  prev  cntr flag  call backup
-atask_st debug_task_handle    =   {"Debug Task     ", 5000,    0,     0,  255,    0,  1,  print_debug_task };
-atask_st btn_scan_handle      =   {"Button Scan    ", 10,      0,     0,  255,    0,  1,  menu_button_scan };
+atask_st debug_task_handle    =   {"Debug Task     ", 30000,    0,     0,  255,    0,  1,  print_debug_task };
 
 
-
-
-unsigned long     targetTime = 0; // Used for testing draw times
+uint32_t  targetTime = 0; 
 SemaphoreHandle_t sema_v; 
 SemaphoreHandle_t mutex_v;
 
@@ -101,7 +63,7 @@ void setup(void) {
   delay(3000);
   while (!Serial);
   Serial.begin(115200); // For debug
-  Serial.println(F("T2311_TFT_Menu.ino"));
+  Serial.println(F("T2312_PicoConsol.ino"));
   pinMode(TFT_BL, OUTPUT);  
   digitalWrite(TFT_BL, HIGH);
 
@@ -110,20 +72,13 @@ void setup(void) {
   Wire.begin();
   time_begin();
 
-  WiFi.begin(WLAN_SSID, WLAN_PASS);
-  Serial.println(F("setup - wifi begin .. "));
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-      delay( 100 );
-      Serial.print(F("."));
-      Serial.flush();
-      //Watchdog.reset();
-  }
-  //Watchdog.reset();
   
   atask_initialize();
   atask_add_new(&debug_task_handle);
-  atask_add_new(&btn_scan_handle);
+  
+  menu_initialize();        // starting scan and read tasks
+  dashboard_initialize();   // start dashboard task
+  // aio_mqtt_initialize();    // task is stopped - for debug purpose only
 
   mutex_v = xSemaphoreCreateMutex(); 
   if (mutex_v == NULL) 
@@ -131,10 +86,8 @@ void setup(void) {
     Serial.println("Mutex can not be created"); 
   } 
   
-  aio_mqtt_initialize();
   //xTaskCreate(aio_mqtt_stm,"AIO_MQTT",4*4096,nullptr,1,nullptr);
-  
-  xTaskCreate(dashboard_update_task,"Dashboard",1024,nullptr,1,nullptr);
+  //xTaskCreate(dashboard_update_task,"Dashboard",1024,nullptr,1,nullptr);
   sema_v = xSemaphoreCreateBinary();
 
   tft.init();
@@ -151,20 +104,26 @@ void setup(void) {
 
 void setup1()
 {
-  menu_initialize();
-  targetTime = millis() + 10;
+  //Watchdog.reset();
+
+  aio_mqtt_initialize();
+  targetTime = millis() + 100;
 
 }
 
-void loop() {
+// Fast running loop
+void loop() 
+{
   atask_run();
 }
 
+// Slow running loop: WiFI an MQTT
 void loop1()
 {
   if (millis() > targetTime)
   {
-    targetTime = millis() + 10;
-    menu_button_scan();
+    aio_mqtt_stm();
+    targetTime = millis() + 100;
+
   }
 }
