@@ -103,19 +103,24 @@ void dashboard_set_text(uint8_t box_indx, char *txt_ptr)
 
 void dashboard_big_time(void)
 {
+    static uint8_t prev_minute = 99;
     DateTime *now = time_get_time_now();
-    char s1[4];
+    if (now->minute() != prev_minute)
+    {
+        prev_minute = now->minute();
+        char s1[4];
+        
+        db_box[BOX_ROW_3].txt[0] = 0x00;
+        dashboard_draw_box(4);
     
-    db_box[BOX_ROW_3].txt[0] = 0x00;
-    dashboard_draw_box(4);
- 
-    sprintf(s1,"%02d",now->hour());
-    String time_str = s1;
-    time_str += ":";
-    sprintf(s1,"%02d",now->minute());
-    time_str += s1;
-    time_str.toCharArray(db_box[BOX_MID_LARGE].txt, TXT_LEN);
-    dashboard_draw_box(1);
+        sprintf(s1,"%02d",now->hour());
+        String time_str = s1;
+        time_str += ":";
+        sprintf(s1,"%02d",now->minute());
+        time_str += s1;
+        time_str.toCharArray(db_box[BOX_MID_LARGE].txt, TXT_LEN);
+        dashboard_draw_box(1);
+    }
 }
 
 void dashboard_show_info(void)
@@ -158,6 +163,7 @@ void dashboard_clear(void)
 void dashboard_update_task()
 {
     uint16_t v_delay_ms = 1000;
+    uint32_t next_step_ms;
     bool    update_box;
     String  Str;
 
@@ -178,7 +184,7 @@ void dashboard_update_task()
                 break;
             case 2:
                 update_box = false;
-                for (uint8_t i = AIO_SUBS_VA_OD_TEMP; (i < AIO_SUBS_NBR_OF) && !update_box; i++ )
+                for (uint8_t i = AIO_SUBS_TRE_ID_TEMP; (i < AIO_SUBS_NBR_OF) && !update_box; i++ )
                 {
                     if ( subs_data[i].updated)
                     {
@@ -199,7 +205,7 @@ void dashboard_update_task()
                               Str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
 
                               Str = String(subs_data[i].value);
-                              //Serial.println(Str);
+                              Serial.println(Str);
                               Str.toCharArray(db_box[BOX_MID_LARGE].txt,6);
                               update_box = true;
                               break;
@@ -213,9 +219,14 @@ void dashboard_update_task()
                             dashboard_draw_box(BOX_ROW_1);
                             dashboard_draw_box(BOX_ROW_2);
                         }
+                        break;
                     }
                 }
-                dashboard_task_handle.state = 1;
+                dashboard_task_handle.state = 3;
+                next_step_ms = millis() + 30000;
+                break;
+              case 3:
+                if (millis() > next_step_ms) dashboard_task_handle.state = 1;
                 break;
 
         }

@@ -1,7 +1,7 @@
 /**
 
   https://github.com/adafruit/Adafruit_MQTT_Library
-
+  https://io.adafruit.com/api/docs/mqtt.html#adafruit-io-mqtt-api
 
  */
 
@@ -167,6 +167,14 @@ void print_subs_data(uint8_t subs_indx)
     Serial.println((char*)aio_subs[subs_indx]->lastread);
 }
 
+void save_subs_float_data(uint8_t subs_indx)
+{
+    String f_str = String((char*)aio_subs[subs_indx]->lastread);
+    subs_data[subs_indx].value = f_str.toFloat();
+    Serial.print("float= "); Serial.print(f_str); Serial.print(" -> "); Serial.println(subs_data[subs_indx].value);
+    subs_data[subs_indx].updated = true;
+}
+
 void subs_delay(uint8_t subs_indx)
 {
     if( (subs_data[subs_indx].delay > 0) && subs_data[subs_indx].active )
@@ -175,8 +183,6 @@ void subs_delay(uint8_t subs_indx)
         aio_mqtt.unsubscribe( aio_subs[subs_indx]);
         subs_data[subs_indx].active = false;
         Serial.print("Delay #: ");Serial.println(subs_indx);
-        
-
     }
 }
 
@@ -186,9 +192,10 @@ void cb_time(uint32_t feed_time)
     uint32_t tz_adjusted;  
     // adjust to local time zone
     tz_adjusted = feed_time + (TIME_ZONE_OFFS * 60 * 60);
-
     uint8_t sindx = AIO_SUBS_TIME;
+    subs_data[sindx].updated = true;
     print_subs_data(sindx);
+    
 }
 
 void xxcb_time(uint32_t feed_time) 
@@ -227,23 +234,26 @@ void xxcb_time(uint32_t feed_time)
     else
       Serial.println(" pm");
 
-  subs_delay(AIO_SUBS_TIME);
+  //subs_delay(AIO_SUBS_TIME);
 }
 
 void cb_tre_id_temp(double tmp)
 {
     uint8_t sindx = AIO_SUBS_TRE_ID_TEMP;
     print_subs_data(sindx);
+    save_subs_float_data(sindx);
 }
 
 void cb_tre_id_hum(double tmp)
 {
     uint8_t sindx = AIO_SUBS_TRE_ID_HUM;
     print_subs_data(sindx);
+    save_subs_float_data(sindx);
 }
 
 void renew_subscriptions( bool force)
 {
+    // unsubscribe -> subscribe is currently not supported
     for (uint8_t subs_indx= 0; subs_indx <  AIO_SUBS_NBR_OF; subs_indx++)
     {
         bool do_subscribe = false;
@@ -295,20 +305,66 @@ void aio_mqtt_stm(void)
             aio_mqtt_task.state = 30;
             break;
         case 30:
-            renew_subscriptions(true);
-            // aio_mqtt.subscribe(&tre_id_temp_feed);
-            // aio_mqtt.subscribe(&tre_id_hum_feed);
-            // aio_mqtt.subscribe(&timefeed);
-            aio_mqtt_task.state = 100;
+            // renew_subscriptions(true);
+            aio_mqtt.subscribe(&tre_id_temp_feed);
+            aio_mqtt.subscribe(&tre_id_hum_feed);
+            aio_mqtt.subscribe(&timefeed);
+            aio_mqtt_task.state = 40;
             break;
+        case 40:
+            aio_mqtt_ctrl.connected =  aio_mqtt_connect();
+            if (aio_mqtt_ctrl.connected == 0) 
+            {
+              aio_mqtt_task.state = 50;
+              aio_mqtt_ctrl.conn_faults = 0;
+            }
+            break;
+        case 50:
+            aio_mqtt.processPackets(10000);
+            aio_mqtt_task.state = 55;
+            break;
+        case 55:
+            if(! aio_mqtt.ping()) 
+            {
+              aio_mqtt.disconnect();
+              aio_mqtt_task.state = 10;
+            }
+            else 
+            {
+              if (subs_data[AIO_SUBS_TIME].updated)
+              {
+                  aio_mqtt_task.state = 60;
+              }
+            }
+
+            // Serial.print("!!! Time feed: ");
+            // Serial.print(subs_data[0].active);
+            // Serial.print(" - ");
+            // Serial.println(subs_data[0].next_subscribe);
+            break;
+
+        case 60:
+            aio_mqtt.unsubscribe( aio_subs[AIO_SUBS_TIME]);
+            aio_mqtt.disconnect();
+             aio_mqtt_task.state = 100;
+            break;
+
+
+
         case 100:
             aio_mqtt_ctrl.connected =  aio_mqtt_connect();
             if (aio_mqtt_ctrl.connected == 0) 
             {
-              aio_mqtt_task.state = 110;
-              aio_mqtt_ctrl.conn_faults = 0;
+              aio_mqtt_task.state = 105;
             }
             break;
+        case 105:
+            aio_mqtt_task.state = 110;
+            aio_mqtt_ctrl.conn_faults = 0;
+            // aio_mqtt.subscribe(&tre_id_temp_feed);
+            // aio_mqtt.subscribe(&tre_id_hum_feed);
+            break;
+
         case 110:
             aio_mqtt.processPackets(10000);
             aio_mqtt_task.state = 120;
@@ -321,14 +377,10 @@ void aio_mqtt_stm(void)
             }
             else 
             {
-              renew_subscriptions(false);
+              // renew_subscriptions(false);
               aio_mqtt_task.state = 110;
             }
 
-            Serial.print("!!! Time feed: ");
-            Serial.print(subs_data[0].active);
-            Serial.print(" - ");
-            Serial.println(subs_data[0].next_subscribe);
             break;
     }
 }
