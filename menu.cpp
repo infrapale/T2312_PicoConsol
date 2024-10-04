@@ -3,6 +3,7 @@
 #include "menu.h"
 #include "atask.h"
 #include "BtnPinOnOff.h"
+#include "dashboard.h"
 
 #define NBR_MENU_KEYS  4
 
@@ -26,7 +27,7 @@ menu_row_st menu[MENU_NBR_OF] =
     {
       {"Main",MENU_MAIN, dummy_cb },
       {"Time",MENU_TIME, menu_test1 },
-      {"Astrid", MENU_VILLA_ASTRID, dummy_cb},
+      {"Sensor", MENU_SENSOR, dummy_cb},
       {"Outd", MENU_OUTDOOR, dummy_cb}
     }
   },
@@ -40,23 +41,23 @@ menu_row_st menu[MENU_NBR_OF] =
       {"Main", MENU_MAIN, dummy_cb}
     }
   },
-  [MENU_VILLA_ASTRID] =
+  [MENU_SENSOR] =
   {
-    "Villa Astrid", 
+    "Sensors", 
     {
       {"Main",MENU_MAIN, dummy_cb },
-      {"Indoor",MENU_VILLA_ASTRID, dummy_cb},
-      {"Outdoor", MENU_VILLA_ASTRID, dummy_cb},
+      {"Prev.",MENU_SENSOR, dashboard_previous_sensor},
+      {"Next", MENU_SENSOR, dashboard_next_sensor},
       {"Main", MENU_MAIN, dummy_cb}
-    }
+     }
   },
   [MENU_OUTDOOR] =
   {
     "Outdoor Sensors", 
     {
       {"Temp",MENU_MAIN, dummy_cb },
-      {"Trend",MENU_VILLA_ASTRID, dummy_cb},
-      {"Limit", MENU_VILLA_ASTRID, dummy_cb},
+      {"Trend",MENU_SENSOR, dummy_cb},
+      {"Limit", MENU_SENSOR, dummy_cb},
       {"Main", MENU_MAIN, dummy_cb}
     }
   }

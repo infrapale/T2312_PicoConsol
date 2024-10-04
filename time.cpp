@@ -3,6 +3,13 @@
 #include <Wire.h>
 #include "time.h"
 
+// https://github.com/XbergCode/DateTimeFunctions
+
+// Convert seconds to date time, from year X.  
+char* conSec2DT(const uint32_t _SEC, const uint16_t _YEAR, const bool _USEMONTHNAME = false);
+// Returns: Date string
+
+
 //extern RTC_PCF8563 rtc;
 RTC_PCF8563 rtc;
 
@@ -91,6 +98,11 @@ uint32_t time_get_epoc_time(void)
     return now.unixtime();
 }
 
+void time_set_epoc_time(uint32_t epoc_time)
+{
+
+    rtc.adjust(const DateTime &dt)
+}
 void time_print(void)
 {
     DateTime now = rtc.now();

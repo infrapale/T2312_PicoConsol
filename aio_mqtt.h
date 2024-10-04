@@ -6,6 +6,7 @@ typedef enum
   AIO_SUBS_TIME = 0,
   AIO_SUBS_TRE_ID_TEMP,
   AIO_SUBS_TRE_ID_HUM,   
+  AIO_SUBS_LA_ID_TEMP,
   AIO_SUBS_VA_OD_TEMP,
   AIO_SUBS_VA_OD_HUM,
   AIO_SUBS_NBR_OF
@@ -21,8 +22,8 @@ typedef struct
   float         value;
   bool          active;
   bool          updated;
-  uint32_t      delay;
-  uint32_t      next_subscribe;
+  uint32_t      show_interval_ms;
+  uint32_t      show_next_ms;
   // mqtt_cb       cb;
 } value_st;
 

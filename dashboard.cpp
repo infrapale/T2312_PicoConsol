@@ -19,7 +19,16 @@ typedef enum
   BOX_NBR_OF
 } boxes_et;
 
+typedef struct
+{
+    bool show_sensor_value;
+    bool force_show_big_time;
+    bool fast_forward;
+    uint8_t sensor_indx;
+    uint8_t menu_sensor_indx;
+} dashboard_ctrl_st;
 
+dashboard_ctrl_st dashboard_ctrl = {false, true, false, AIO_SUBS_TRE_ID_TEMP, 0};
 // extern value_st subs_data[];
 
 extern TFT_eSPI tft;
@@ -105,13 +114,13 @@ void dashboard_big_time(void)
 {
     static uint8_t prev_minute = 99;
     DateTime *now = time_get_time_now();
-    if (now->minute() != prev_minute)
+    if ((now->minute() != prev_minute) || dashboard_ctrl.force_show_big_time)
     {
         prev_minute = now->minute();
         char s1[4];
         
         db_box[BOX_ROW_3].txt[0] = 0x00;
-        dashboard_draw_box(4);
+        dashboard_draw_box(BOX_ROW_3);
     
         sprintf(s1,"%02d",now->hour());
         String time_str = s1;
@@ -119,7 +128,7 @@ void dashboard_big_time(void)
         sprintf(s1,"%02d",now->minute());
         time_str += s1;
         time_str.toCharArray(db_box[BOX_MID_LARGE].txt, TXT_LEN);
-        dashboard_draw_box(1);
+        dashboard_draw_box(BOX_MID_LARGE);
     }
 }
 
@@ -149,11 +158,14 @@ void dashboard_show_info(void)
 void dashboard_show_common(void)
 {
     String time_str;
-    strcpy(db_box[BOX_ROW_1].txt, MAIN_TITLE);
-    dashboard_draw_box(BOX_ROW_1);
-    time_to_string(&time_str);
-    time_str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
-    dashboard_draw_box(BOX_ROW_2);
+    if (!dashboard_ctrl.show_sensor_value)  
+    {
+        strcpy(db_box[BOX_ROW_1].txt, MAIN_TITLE);
+        dashboard_draw_box(BOX_ROW_1);
+        time_to_string(&time_str);
+        time_str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
+        dashboard_draw_box(BOX_ROW_2);
+    }
 }
 
 void dashboard_clear(void)
@@ -162,75 +174,103 @@ void dashboard_clear(void)
 }
 void dashboard_update_task()
 {
-    uint16_t v_delay_ms = 1000;
-    uint32_t next_step_ms;
-    bool    update_box;
-    String  Str;
-
+    static uint32_t next_step_ms;
+    bool            update_box;
+    String          Str;
+    uint8_t         i; 
+    
+    switch (dashboard_task_handle.state)
     {
-        //Serial.print("dashboard_update_task state: "); Serial.println(state);
-        switch (dashboard_task_handle.state)
-        {
-            case 0:
-                dashboard_show_info();
-                v_delay_ms = 10000;
-                dashboard_task_handle.state++;
-                break;
-            case 1:                
-                dashboard_show_common();
-                dashboard_big_time();
-                v_delay_ms = 5000;
-                dashboard_task_handle.state++;
-                break;
-            case 2:
-                update_box = false;
-                for (uint8_t i = AIO_SUBS_TRE_ID_TEMP; (i < AIO_SUBS_NBR_OF) && !update_box; i++ )
+        case 0:
+            dashboard_show_info();
+            dashboard_task_handle.state++;
+            break;
+        case 1:                
+            dashboard_show_common();
+            dashboard_big_time();
+            dashboard_ctrl.force_show_big_time = false;
+            dashboard_task_handle.state++;
+            break;
+        case 2:
+            update_box = false;
+            
+            i = (uint8_t)dashboard_ctrl.sensor_indx;
+            if (millis() > subs_data[i].show_next_ms)
+            {
+                if ( subs_data[i].updated)
                 {
-                    if ( subs_data[i].updated)
+                    dashboard_ctrl.show_sensor_value = true;
+                    Serial.print("aio index: "); Serial.print(i); 
+                    Serial.println(" = Updated ");
+                    //subs_data[i].updated = false;
+                    Str = zone_main_label[subs_data[i].main_zone_index];
+                    Str += " ";
+                    Str += subs_data[i].sub_zone;
+                    Str.toCharArray(db_box[BOX_ROW_1].txt,40);
+
+                    Str = measure_label[subs_data[i].unit_index];
+                    Str += " ";
+                    Str += unit_label[subs_data[i].unit_index];
+                    Str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
+
+                    Str = String(subs_data[i].value);
+                    Serial.println(Str);
+                    Str.toCharArray(db_box[BOX_MID_LARGE].txt,6);
+                    update_box = true;
+                    if (update_box)
                     {
-                        Serial.print("aio index: "); Serial.print(i); 
-                        Serial.println(" = Updated ");
-                        subs_data[i].updated = false;
-                        switch(i)
-                        {
-                            case AIO_SUBS_TRE_ID_TEMP:
-                              Str = zone_main_label[subs_data[i].main_zone_index];
-                              Str += " ";
-                              Str += subs_data[i].sub_zone;
-                              Str.toCharArray(db_box[BOX_ROW_1].txt,40);
-
-                              Str = measure_label[subs_data[i].unit_index];
-                              Str += " ";
-                              Str += unit_label[subs_data[i].unit_index];
-                              Str.toCharArray(db_box[BOX_ROW_2].txt, TXT_LEN);
-
-                              Str = String(subs_data[i].value);
-                              Serial.println(Str);
-                              Str.toCharArray(db_box[BOX_MID_LARGE].txt,6);
-                              update_box = true;
-                              break;
-                            case AIO_SUBS_VA_OD_HUM:
-                              break;
-                        }
-                        if (update_box)
-                        {
-                            dashboard_draw_box(BOX_UPPER_LARGE);
-                            dashboard_draw_box(BOX_MID_LARGE);
-                            dashboard_draw_box(BOX_ROW_1);
-                            dashboard_draw_box(BOX_ROW_2);
-                        }
-                        break;
+                        dashboard_draw_box(BOX_UPPER_LARGE);
+                        dashboard_draw_box(BOX_MID_LARGE);
+                        dashboard_draw_box(BOX_ROW_1);
+                        dashboard_draw_box(BOX_ROW_2);
                     }
                 }
+                subs_data[i].show_next_ms = millis() + subs_data[i].show_interval_ms;
+            }
+
+            if (dashboard_ctrl.sensor_indx < AIO_SUBS_NBR_OF - 1) dashboard_ctrl.sensor_indx++;    
+            else dashboard_ctrl.sensor_indx = AIO_SUBS_TRE_ID_TEMP;
+            
+            if (update_box )
+            {
                 dashboard_task_handle.state = 3;
-                next_step_ms = millis() + 30000;
-                break;
-              case 3:
-                if (millis() > next_step_ms) dashboard_task_handle.state = 1;
-                break;
-
-        }
+                next_step_ms = millis() + 10000;
+            }
+            else
+            {
+               dashboard_task_handle.state = 1;
+            }
+            break;  
+        case 3:
+            if ((millis() > next_step_ms) || dashboard_ctrl.fast_forward)
+            {
+                dashboard_ctrl.force_show_big_time = true;
+                dashboard_task_handle.state = 1;
+                dashboard_ctrl.show_sensor_value = false;
+                dashboard_ctrl.fast_forward = false;
+            } 
+              
+            break;
     }
+    Serial.printf("db %d -> %d\n", dashboard_task_handle.prev_state, dashboard_task_handle.state);
+}
 
+void dashboard_next_sensor(void)
+{
+    dashboard_ctrl.menu_sensor_indx++;
+    if(dashboard_ctrl.menu_sensor_indx >= AIO_SUBS_NBR_OF) dashboard_ctrl.menu_sensor_indx = AIO_SUBS_TRE_ID_TEMP;
+    subs_data[dashboard_ctrl.menu_sensor_indx].show_next_ms = 0              ;
+    dashboard_ctrl.sensor_indx = dashboard_ctrl.menu_sensor_indx;
+    Serial.printf("dashboard_ctrl.menu_sensor_indx=%d\n",dashboard_ctrl.menu_sensor_indx);
+    dashboard_ctrl.fast_forward = true;
+}
 
+void dashboard_previous_sensor(void)
+{
+    if(dashboard_ctrl.menu_sensor_indx <= 1 ) dashboard_ctrl.menu_sensor_indx = AIO_SUBS_NBR_OF -1;
+    else dashboard_ctrl.menu_sensor_indx--;
+    subs_data[dashboard_ctrl.menu_sensor_indx].show_next_ms = 0;
+    dashboard_ctrl.sensor_indx = dashboard_ctrl.menu_sensor_indx;
+    Serial.printf("dashboard_ctrl.menu_sensor_indx=%d\n",dashboard_ctrl.menu_sensor_indx);
+    dashboard_ctrl.fast_forward = true;
 }
