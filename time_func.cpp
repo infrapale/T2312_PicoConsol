@@ -1,17 +1,30 @@
 // https://github.com/adafruit/RTClib/blob/master/src/RTClib.h
 
 #include <Wire.h>
-#include "time.h"
+#include "time_func.h"
+#include <TimeLib.h>
+#include "RTC_NXP.h"
+#include "RTClib.h"
+
+
+typedef struct 
+{
+    tm        new_time;
+    DateTime  now;
+} rtc_ctrl_st;
+
 
 // https://github.com/XbergCode/DateTimeFunctions
 
 // Convert seconds to date time, from year X.  
-char* conSec2DT(const uint32_t _SEC, const uint16_t _YEAR, const bool _USEMONTHNAME = false);
+// char* conSec2DT(const uint32_t _SEC, const uint16_t _YEAR, const bool _USEMONTHNAME = false);
 // Returns: Date string
 
 
 //extern RTC_PCF8563 rtc;
 RTC_PCF8563 rtc;
+rtc_ctrl_st rtc_ctrl;
+
 
 char week_day[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -100,8 +113,18 @@ uint32_t time_get_epoc_time(void)
 
 void time_set_epoc_time(uint32_t epoc_time)
 {
+    const DateTime now =epoc_time;
+    //rtc_ctrl.now.year()
+    //const uint32_t epoc = epoc_time;
+    // rtc_ctrl.new_time.tm_year = year(epoc);
+    // rtc_ctrl.new_time.tm_mon = month(epoc);  
+    // rtc_ctrl.new_time.tm_mday = day(epoc);
+    // rtc_ctrl.new_time.tm_hour = hour(epoc);
+    // rtc_ctrl.new_time.tm_min = minute(epoc);
+    // rtc_ctrl.new_time.tm_sec = second(epoc);
 
-    rtc.adjust(const DateTime &dt)
+    rtc.adjust(now);
+    time_print();
 }
 void time_print(void)
 {

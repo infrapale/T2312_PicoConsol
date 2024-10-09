@@ -2,7 +2,7 @@
 #include "main.h"
 #include "dashboard.h"
 #include "aio_mqtt.h"
-#include "time.h"
+#include "time_func.h"
 #include "atask.h"
 
 #define NBR_BOXES           7
@@ -252,7 +252,7 @@ void dashboard_update_task()
               
             break;
     }
-    Serial.printf("db %d -> %d\n", dashboard_task_handle.prev_state, dashboard_task_handle.state);
+    //Serial.printf("db %d -> %d\n", dashboard_task_handle.prev_state, dashboard_task_handle.state);
 }
 
 void dashboard_next_sensor(void)

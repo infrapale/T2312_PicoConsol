@@ -8,9 +8,9 @@
 //#define VILLA_ASTRID
 
 #include <board.h>
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
+//#include <FreeRTOS.h>
+#include "atask.h"
+// #include <semphr.h>
 
 #define LABEL_LEN           12
 #define UNIT_LEN            6

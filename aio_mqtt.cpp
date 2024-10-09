@@ -25,7 +25,7 @@
 #include <TimeLib.h>
 #include "aio_mqtt.h"
 #include "atask.h"
-#include "time.h"
+#include "time_func.h"
 #include "log.h"
 #include "dashboard.h"
 
@@ -192,6 +192,7 @@ void cb_time(uint32_t feed_time)
         hour(epoc_time), minute(epoc_time), second(epoc_time));
     // adjust to local time zone
     tz_adjusted = feed_time + (TIME_ZONE_OFFS * 60 * 60);
+    time_set_epoc_time(tz_adjusted);
     uint8_t sindx = AIO_SUBS_TIME;
     subs_data[sindx].updated = true;
     print_subs_data(sindx);    

@@ -33,7 +33,7 @@ https://learn.adafruit.com/dvi-io/code-the-dashboard
 #include "secrets.h"
 #include <Wire.h>
 #include "RTClib.h"
-#include "time.h"
+#include "time_func.h"
 #include "atask.h"
 #include "aio_mqtt.h"
 #include "log.h"
@@ -56,8 +56,6 @@ atask_st debug_task_handle    =   {"Debug Task     ", 30000,    0,     0,  255, 
 
 
 uint32_t  targetTime = 0; 
-SemaphoreHandle_t sema_v; 
-SemaphoreHandle_t mutex_v;
 
 void setup(void) {
   delay(3000);
@@ -80,16 +78,7 @@ void setup(void) {
   dashboard_initialize();   // start dashboard task
   // aio_mqtt_initialize();    // task is stopped - for debug purpose only
 
-  mutex_v = xSemaphoreCreateMutex(); 
-  if (mutex_v == NULL) 
-  { 
-    Serial.println("Mutex can not be created"); 
-  } 
-  
-  //xTaskCreate(aio_mqtt_stm,"AIO_MQTT",4*4096,nullptr,1,nullptr);
-  //xTaskCreate(dashboard_update_task,"Dashboard",1024,nullptr,1,nullptr);
-  sema_v = xSemaphoreCreateBinary();
-
+ 
   tft.init();
   tft.setRotation(3);
   tft.setTextSize(1);
