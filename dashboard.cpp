@@ -54,28 +54,31 @@ char zone_main_label[NBR_MAIN_ZONES][MAIN_ZONE_LABEL_LEN] =
     "Villa Astrid   ",
     "Lilla Astrid   ",
     "Laituri        ",
-    "Tampere        "    
+    "Tampere        ",
+    "Ruuvi          "    
 };
 
 
-char unit_label[NBR_UNITS][UNIT_LABEL_LEN] =
+char unit_label[UNIT_NBR_OF][UNIT_LABEL_LEN] =
 {
   // 012345678
     "Celsius ",
     "%       ",
     "kPa     ",
     "Lux     ",
-    "LDR     "
+    "LDR     ",
+    "V       "
 };
 
-char measure_label[NBR_UNITS][MEASURE_LABEL_LEN] =
+char measure_label[UNIT_NBR_OF][MEASURE_LABEL_LEN] =
 {
   // 0123456789012345
     "Temperature    ",
     "Humidity       ",
     "Air Pressure   ",
     "Light          ",
-    "LDR Value      "
+    "LDR Value      ",
+    "Voltage        "
 };
 
 

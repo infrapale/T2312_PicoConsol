@@ -70,6 +70,9 @@ Adafruit_MQTT_Subscribe villa_astrid_od_hum     = Adafruit_MQTT_Subscribe(&aio_m
 Adafruit_MQTT_Subscribe tre_id_temp_feed        = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_FEED_TRE_TEMP_ID);
 Adafruit_MQTT_Subscribe tre_id_hum_feed         = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tre-indoor-humidity");
 Adafruit_MQTT_Subscribe lilla_astrid_id_temp    = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/lillaastrid.studio-temp");
+Adafruit_MQTT_Subscribe ruuvi_e6_temp           = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ruuvi-e6");
+Adafruit_MQTT_Subscribe ruuvi_ea_temp           = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ruuvi-ea");
+Adafruit_MQTT_Subscribe ruuvi_ed_temp           = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ruuvi-ed");
 
 Adafruit_MQTT_Subscribe timefeed                = Adafruit_MQTT_Subscribe(&aio_mqtt, "time/seconds");
 //Adafruit_MQTT_Subscribe timefeed                = Adafruit_MQTT_Subscribe(&aio_mqtt, "time/ISO-8601");
@@ -79,12 +82,15 @@ Adafruit_MQTT_Subscribe timefeed                = Adafruit_MQTT_Subscribe(&aio_m
 
 Adafruit_MQTT_Subscribe *aio_subs[AIO_SUBS_NBR_OF] =
 {
-  [AIO_SUBS_TIME]         = &timefeed,
-  [AIO_SUBS_TRE_ID_TEMP]  = &tre_id_temp_feed,
-  [AIO_SUBS_TRE_ID_HUM]   = &tre_id_hum_feed,
-  [AIO_SUBS_LA_ID_TEMP]   = &lilla_astrid_id_temp,
-  [AIO_SUBS_VA_OD_TEMP]   = &villa_astrid_od_temp,
-  [AIO_SUBS_VA_OD_HUM]    = &villa_astrid_od_hum,
+  [AIO_SUBS_TIME]           = &timefeed,
+  [AIO_SUBS_TRE_ID_TEMP]    = &tre_id_temp_feed,
+  [AIO_SUBS_TRE_ID_HUM]     = &tre_id_hum_feed,
+  [AIO_SUBS_LA_ID_TEMP]     = &lilla_astrid_id_temp,
+  [AIO_SUBS_VA_OD_TEMP]     = &villa_astrid_od_temp,
+  [AIO_SUBS_VA_OD_HUM]      = &villa_astrid_od_hum,
+  [AIO_SUBS_RUUVI_E6_TEMP]  = &ruuvi_e6_temp,
+  [AIO_SUBS_RUUVI_EA_TEMP]  = &ruuvi_ea_temp,
+  [AIO_SUBS_RUUVI_ED_TEMP]  = &ruuvi_ed_temp,
 };
 
 Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
@@ -98,12 +104,15 @@ void cb_time_feed(uint32_t feed_time);
 
 value_st subs_data[AIO_SUBS_NBR_OF]
 {
-  [AIO_SUBS_TIME]         = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
-  [AIO_SUBS_TRE_ID_TEMP]  = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
-  [AIO_SUBS_TRE_ID_HUM]   = {ZONE_TAMPERE, "ID ",  UNIT_HUMIDITY, 0.0, true, false, 300000, 0},
-  [AIO_SUBS_LA_ID_TEMP]   = {ZONE_LILLA_ASTRID, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
-  [AIO_SUBS_VA_OD_TEMP]   = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0,true, false, 60000, 0},
-  [AIO_SUBS_VA_OD_HUM]    = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_TIME]           = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
+  [AIO_SUBS_TRE_ID_TEMP]    = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_TRE_ID_HUM]     = {ZONE_TAMPERE, "ID ",  UNIT_HUMIDITY, 0.0, true, false, 300000, 0},
+  [AIO_SUBS_LA_ID_TEMP]     = {ZONE_LILLA_ASTRID, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_VA_OD_TEMP]     = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0,true, false, 60000, 0},
+  [AIO_SUBS_VA_OD_HUM]      = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_RUUVI_E6_TEMP]  = {ZONE_RUUVI, "XX ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
+  [AIO_SUBS_RUUVI_EA_TEMP]  = {ZONE_RUUVI, "XX ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
+  [AIO_SUBS_RUUVI_ED_TEMP]  = {ZONE_RUUVI, "XX ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
 };
 
 
@@ -112,8 +121,8 @@ extern Adafruit_MQTT_Subscribe *aio_subs[];
 extern Adafruit_MQTT_Publish *aio_publ[];
 extern Adafruit_MQTT_Client aio_mqtt;
 extern char zone_main_label[NBR_MAIN_ZONES][MAIN_ZONE_LABEL_LEN];
-extern char unit_label[NBR_UNITS][UNIT_LABEL_LEN];
-extern char measure_label[NBR_UNITS][MEASURE_LABEL_LEN];
+extern char unit_label[UNIT_NBR_OF][UNIT_LABEL_LEN];
+extern char measure_label[UNIT_NBR_OF][MEASURE_LABEL_LEN];
 
 
 //                                  123456789012345   ival  next  state  prev  cntr flag  call backup
@@ -213,6 +222,22 @@ void cb_lilla_astrid_id_temp(double tmp)
     save_subs_float_data(AIO_SUBS_LA_ID_TEMP);
 }
 
+void cb_ruuvi_e6_temp(double tmp)
+{
+    save_subs_float_data(AIO_SUBS_RUUVI_E6_TEMP);
+}
+
+void cb_ruuvi_ea_temp(double tmp)
+{
+    save_subs_float_data(AIO_SUBS_RUUVI_EA_TEMP);
+}
+
+void cb_ruuvi_ed_temp(double tmp)
+{
+    save_subs_float_data(AIO_SUBS_RUUVI_ED_TEMP);
+}
+
+
 void cb_dummy(double tmp) {}
 
 
@@ -261,6 +286,9 @@ void aio_mqtt_stm(void)
             lilla_astrid_id_temp.setCallback(cb_lilla_astrid_id_temp);
             villa_astrid_od_temp.setCallback(cb_dummy);
             villa_astrid_od_hum.setCallback(cb_dummy);
+            ruuvi_e6_temp.setCallback(cb_ruuvi_e6_temp);
+            ruuvi_ea_temp.setCallback(cb_ruuvi_ea_temp);
+            ruuvi_ed_temp.setCallback(cb_ruuvi_ed_temp);
             timefeed.setCallback(cb_time);
             aio_mqtt_task.state = 30;
             break;

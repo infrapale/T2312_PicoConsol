@@ -59,7 +59,7 @@ uint32_t  targetTime = 0;
 
 void setup(void) {
   delay(3000);
-  while (!Serial);
+  // while (!Serial);
   Serial.begin(115200); // For debug
   Serial.println(F("T2312_PicoConsol.ino"));
   pinMode(TFT_BL, OUTPUT);  

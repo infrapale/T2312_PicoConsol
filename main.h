@@ -17,9 +17,8 @@
 #define TXT_LEN             40
 #define TIME_ZONE_OFFS      3
 
-#define NBR_MAIN_ZONES      4
+#define NBR_MAIN_ZONES      5
 #define NBR_SUB_ZONES       20
-#define NBR_UNITS           5
 #define MAIN_ZONE_LABEL_LEN 16
 #define SUB_ZONE_LABEL_LEN  20
 #define UNIT_LABEL_LEN      10
@@ -44,7 +43,8 @@ typedef enum
     ZONE_VILLA_ASTRID = 0,
     ZONE_LILLA_ASTRID,
     ZONE_LAITURI,
-    ZONE_TAMPERE
+    ZONE_TAMPERE,
+    ZONE_RUUVI
 } main_zone_et;
 
 typedef enum
@@ -53,7 +53,9 @@ typedef enum
     UNIT_HUMIDITY,
     UNIT_AIR_PRESSURE,
     UNIT_LIGHT,
-    UNIT_LDR
+    UNIT_LDR,
+    UNIT_VOLTAGE,
+    UNIT_NBR_OF
 } unit_et;
 
 
