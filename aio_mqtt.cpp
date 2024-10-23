@@ -40,7 +40,6 @@ typedef struct
 
 } aio_mqtt_ctrl_st;
 
-date_time_st date_time ={0};
 
 aio_mqtt_ctrl_st aio_mqtt_ctrl =
 {
@@ -56,42 +55,25 @@ aio_mqtt_ctrl_st aio_mqtt_ctrl =
 const char MQTT_SERVER[] PROGMEM    = AIO_SERVER;
 const char MQTT_USERNAME[] PROGMEM  = AIO_USERNAME;
 const char MQTT_PASSWORD[] PROGMEM  = AIO_KEY;
-const char PHOTOCELL_FEED[] PROGMEM = AIO_USERNAME "/feeds/photocell";
-const char AIO_FEED_TRE_TEMP_ID[] PROGMEM = AIO_USERNAME "/feeds/home-tampere.tampere-indoor-temperature";
 
 
-// RTC_PCF8563 rtc;
 WiFiClient client;
-
 Adafruit_MQTT_Client aio_mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
+
+// Publish Feeds   !! not implemented here yet
 Adafruit_MQTT_Publish villa_astrid_home_mode    = Adafruit_MQTT_Publish(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.astrid-mode");
+
+// Subscribe Feeds
 Adafruit_MQTT_Subscribe villa_astrid_od_temp    = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-temp");
 Adafruit_MQTT_Subscribe villa_astrid_od_hum     = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ulko-hum");
-Adafruit_MQTT_Subscribe tre_id_temp_feed        = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_FEED_TRE_TEMP_ID);
+Adafruit_MQTT_Subscribe tre_id_temp_feed        = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tampere-indoor-temperature");
 Adafruit_MQTT_Subscribe tre_id_hum_feed         = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/home-tampere.tre-indoor-humidity");
 Adafruit_MQTT_Subscribe lilla_astrid_id_temp    = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/lillaastrid.studio-temp");
 Adafruit_MQTT_Subscribe ruuvi_e6_temp           = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ruuvi-e6");
 Adafruit_MQTT_Subscribe ruuvi_ea_temp           = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ruuvi-ea");
 Adafruit_MQTT_Subscribe ruuvi_ed_temp           = Adafruit_MQTT_Subscribe(&aio_mqtt, AIO_USERNAME "/feeds/villaastrid.ruuvi-ed");
-
 Adafruit_MQTT_Subscribe timefeed                = Adafruit_MQTT_Subscribe(&aio_mqtt, "time/seconds");
-//Adafruit_MQTT_Subscribe timefeed                = Adafruit_MQTT_Subscribe(&aio_mqtt, "time/ISO-8601");
 
-
-//infrapale/feeds/home-tampere.tampere-indoor-temperature
-
-Adafruit_MQTT_Subscribe *aio_subs[AIO_SUBS_NBR_OF] =
-{
-  [AIO_SUBS_TIME]           = &timefeed,
-  [AIO_SUBS_TRE_ID_TEMP]    = &tre_id_temp_feed,
-  [AIO_SUBS_TRE_ID_HUM]     = &tre_id_hum_feed,
-  [AIO_SUBS_LA_ID_TEMP]     = &lilla_astrid_id_temp,
-  [AIO_SUBS_VA_OD_TEMP]     = &villa_astrid_od_temp,
-  [AIO_SUBS_VA_OD_HUM]      = &villa_astrid_od_hum,
-  [AIO_SUBS_RUUVI_E6_TEMP]  = &ruuvi_e6_temp,
-  [AIO_SUBS_RUUVI_EA_TEMP]  = &ruuvi_ea_temp,
-  [AIO_SUBS_RUUVI_ED_TEMP]  = &ruuvi_ed_temp,
-};
 
 Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
 {
@@ -99,41 +81,33 @@ Adafruit_MQTT_Publish *aio_publ[AIO_PUBL_NBR_OF] =
   [AIO_PUBL_VA_AC_TEMP]  = &villa_astrid_home_mode
 };
 
-void dummy_mqtt_cb(void){}
-void cb_time_feed(uint32_t feed_time);
-
 value_st subs_data[AIO_SUBS_NBR_OF]
-{
-  [AIO_SUBS_TIME]           = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
-  [AIO_SUBS_TRE_ID_TEMP]    = {ZONE_TAMPERE, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
-  [AIO_SUBS_TRE_ID_HUM]     = {ZONE_TAMPERE, "ID ",  UNIT_HUMIDITY, 0.0, true, false, 300000, 0},
-  [AIO_SUBS_LA_ID_TEMP]     = {ZONE_LILLA_ASTRID, "ID ",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
-  [AIO_SUBS_VA_OD_TEMP]     = {ZONE_VILLA_ASTRID, "OD ",  UNIT_TEMPERATURE, 0.0,true, false, 60000, 0},
-  [AIO_SUBS_VA_OD_HUM]      = {ZONE_VILLA_ASTRID, "OD ",  UNIT_HUMIDITY, 0.0, true, false, 120000, 0},
-  [AIO_SUBS_RUUVI_E6_TEMP]  = {ZONE_RUUVI, "XX ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
-  [AIO_SUBS_RUUVI_EA_TEMP]  = {ZONE_RUUVI, "XX ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
-  [AIO_SUBS_RUUVI_ED_TEMP]  = {ZONE_RUUVI, "XX ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
+{  //                                                     1234567890123456789
+  [AIO_SUBS_TIME]           =  { &timefeed,             "Adafruit Time      ",  UNIT_TIME, 0.0, true, false, 60000, 0},
+  [AIO_SUBS_TRE_ID_TEMP]    =  { &tre_id_temp_feed,     "Tampere          OD",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_TRE_ID_HUM]     =  { &tre_id_hum_feed,      "Tampere          OD",  UNIT_HUMIDITY, 0.0, true, false, 300000, 0},
+  [AIO_SUBS_LA_ID_TEMP]     =  { &lilla_astrid_id_temp, "Lilla Astrid     ID",  UNIT_TEMPERATURE, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_VA_OD_TEMP]     =  { &villa_astrid_od_temp, "Villa Astrid     OD",  UNIT_TEMPERATURE, 0.0,true, false, 60000, 0},
+  [AIO_SUBS_VA_OD_HUM]      =  { &villa_astrid_od_hum,  "Villa Astrid     OD",  UNIT_HUMIDITY, 0.0, true, false, 120000, 0},
+  [AIO_SUBS_RUUVI_E6_TEMP]  =  { &ruuvi_e6_temp,        "Ruuvi Tag E6       ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
+  [AIO_SUBS_RUUVI_EA_TEMP]  =  { &ruuvi_ea_temp,        "Ruuvi Tag EA       ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
+  [AIO_SUBS_RUUVI_ED_TEMP]  =  { &ruuvi_ed_temp,        "Ruuvi Tag ED       ",  UNIT_TEMPERATURE, 0.0, true, false, 60000, 0},
 };
 
+// Remember to set callbacks fo rnew feeds
 
-
-extern Adafruit_MQTT_Subscribe *aio_subs[];
-extern Adafruit_MQTT_Publish *aio_publ[];
-extern Adafruit_MQTT_Client aio_mqtt;
-extern char zone_main_label[NBR_MAIN_ZONES][MAIN_ZONE_LABEL_LEN];
 extern char unit_label[UNIT_NBR_OF][UNIT_LABEL_LEN];
 extern char measure_label[UNIT_NBR_OF][MEASURE_LABEL_LEN];
 
-
+// atask definition
 //                                  123456789012345   ival  next  state  prev  cntr flag  call backup
 atask_st aio_mqtt_task        =   {"AIO MQTT SM    ", 1000,   0,     0,  255,    0,   0, aio_mqtt_stm };
 
 
-Adafruit_MQTT_Subscribe *aio_subscription;
-
 void aio_mqtt_initialize(void)
 {
-    //aio_mqtt_ctrl.aindx = atask_add_new(&aio_mqtt_task);   // do not actually run as a task
+    // aio_mqtt_ctrl.aindx = atask_add_new(&aio_mqtt_task);   
+    // this task is called from the loop1() and is not running as a atask
     aio_mqtt_task.state = 0;
     aio_mqtt_task.prev_state = 255;
 }
@@ -173,14 +147,14 @@ int8_t aio_mqtt_connect() {
 
 void print_subs_data(uint8_t subs_indx)
 {
-    Serial.print(aio_subs[subs_indx]->topic);
+    Serial.print(subs_data[subs_indx].aio_subs->topic);
     Serial.print(" = ");
-    Serial.println((char*)aio_subs[subs_indx]->lastread);
+    Serial.println((char*)subs_data[subs_indx].aio_subs->lastread);
 }
 
 void save_subs_float_data(uint8_t subs_indx)
 {
-    String f_str = String((char*)aio_subs[subs_indx]->lastread);
+    String f_str = String((char*)subs_data[subs_indx].aio_subs->lastread);
     subs_data[subs_indx].value = f_str.toFloat();
     //Serial.print("float= "); Serial.print(f_str); Serial.print(" -> "); Serial.println(subs_data[subs_indx].value);
     subs_data[subs_indx].updated = true;
@@ -222,6 +196,16 @@ void cb_lilla_astrid_id_temp(double tmp)
     save_subs_float_data(AIO_SUBS_LA_ID_TEMP);
 }
 
+void cb_villa_astrid_od_temp(double tmp)
+{
+    save_subs_float_data(AIO_SUBS_VA_OD_TEMP);
+}
+
+void cb_villa_astrid_od_hum(double tmp)
+{
+    save_subs_float_data(AIO_SUBS_VA_OD_HUM);
+}
+
 void cb_ruuvi_e6_temp(double tmp)
 {
     save_subs_float_data(AIO_SUBS_RUUVI_E6_TEMP);
@@ -248,8 +232,8 @@ void activate_subscriptions(void)
     {
         if( (subs_data[subs_indx].show_interval_ms > 0) && subs_data[subs_indx].active)
         {
-            aio_mqtt.subscribe( aio_subs[subs_indx]);
-            Serial.printf("Subscribe to #%d: %s\n", subs_indx, aio_subs[subs_indx]->topic ); 
+            aio_mqtt.subscribe( subs_data[subs_indx].aio_subs);
+            Serial.printf("Subscribe to #%d: %s\n", subs_indx, subs_data[subs_indx].aio_subs->topic ); 
         }
     }
 }
@@ -281,15 +265,16 @@ void aio_mqtt_stm(void)
             }
             break;
         case 20:
-            tre_id_temp_feed.setCallback(cb_tre_id_temp);
-            tre_id_hum_feed.setCallback(cb_tre_id_hum);
-            lilla_astrid_id_temp.setCallback(cb_lilla_astrid_id_temp);
-            villa_astrid_od_temp.setCallback(cb_dummy);
-            villa_astrid_od_hum.setCallback(cb_dummy);
-            ruuvi_e6_temp.setCallback(cb_ruuvi_e6_temp);
-            ruuvi_ea_temp.setCallback(cb_ruuvi_ea_temp);
-            ruuvi_ed_temp.setCallback(cb_ruuvi_ed_temp);
-            timefeed.setCallback(cb_time);
+  
+            subs_data[AIO_SUBS_TIME].aio_subs->setCallback(cb_time); 
+            subs_data[AIO_SUBS_TRE_ID_TEMP].aio_subs->setCallback(cb_tre_id_temp);
+            subs_data[AIO_SUBS_TRE_ID_HUM].aio_subs->setCallback(cb_tre_id_hum);
+            subs_data[AIO_SUBS_LA_ID_TEMP].aio_subs->setCallback(cb_lilla_astrid_id_temp);
+            subs_data[AIO_SUBS_VA_OD_TEMP].aio_subs->setCallback(cb_villa_astrid_od_temp);
+            subs_data[AIO_SUBS_VA_OD_HUM].aio_subs->setCallback(cb_villa_astrid_od_temp);
+            subs_data[AIO_SUBS_RUUVI_E6_TEMP].aio_subs->setCallback(cb_ruuvi_e6_temp);
+            subs_data[AIO_SUBS_RUUVI_EA_TEMP].aio_subs->setCallback(cb_ruuvi_ea_temp);
+            subs_data[AIO_SUBS_RUUVI_ED_TEMP].aio_subs->setCallback(cb_ruuvi_ed_temp);
             aio_mqtt_task.state = 30;
             break;
         case 30:
@@ -323,7 +308,7 @@ void aio_mqtt_stm(void)
             }
             break;
         case 60:
-            aio_mqtt.unsubscribe( aio_subs[AIO_SUBS_TIME]);
+            aio_mqtt.unsubscribe( subs_data[AIO_SUBS_TIME].aio_subs);
             aio_mqtt.disconnect();
             aio_mqtt_task.state = 100;
             break;

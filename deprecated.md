@@ -1,4 +1,23 @@
 
+//infrapale/feeds/home-tampere.tampere-indoor-temperature
+
+// Adafruit_MQTT_Subscribe *aio_subs[AIO_SUBS_NBR_OF] =
+// {
+//   [AIO_SUBS_TIME]           = &timefeed,
+//   [AIO_SUBS_TRE_ID_TEMP]    = &tre_id_temp_feed,
+//   [AIO_SUBS_TRE_ID_HUM]     = &tre_id_hum_feed,
+//   [AIO_SUBS_LA_ID_TEMP]     = &lilla_astrid_id_temp,
+//   [AIO_SUBS_VA_OD_TEMP]     = &villa_astrid_od_temp,
+//   [AIO_SUBS_VA_OD_HUM]      = &villa_astrid_od_hum,
+//   [AIO_SUBS_RUUVI_E6_TEMP]  = &ruuvi_e6_temp,
+//   [AIO_SUBS_RUUVI_EA_TEMP]  = &ruuvi_ea_temp,
+//   [AIO_SUBS_RUUVI_ED_TEMP]  = &ruuvi_ed_temp,
+// };
+
+
+
+
+
   // First we test them with a background colour set
   tft.setTextSize(1);
   tft.fillScreen(TFT_BLACK);

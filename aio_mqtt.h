@@ -1,6 +1,9 @@
 #ifndef __AIO_MQTT_H__
 #define __AIO_MQTT_H__
 
+#define   LOCATION_LABEL_LEN   20
+#include "Adafruit_MQTT.h"
+
 typedef enum 
 {
   AIO_SUBS_TIME = 0,
@@ -19,15 +22,14 @@ typedef void (*mqtt_cb)(void);
 
 typedef struct
 {
-  main_zone_et  main_zone_index;
-  char          sub_zone[SUB_ZONE_LABEL_LEN];
-  unit_et       unit_index;
-  float         value;
-  bool          active;
-  bool          updated;
-  uint32_t      show_interval_ms;
-  uint32_t      show_next_ms;
-  // mqtt_cb       cb;
+  Adafruit_MQTT_Subscribe *aio_subs;
+  char                    location[LOCATION_LABEL_LEN];
+  unit_et                 unit_index;
+  float                   value;
+  bool                    active;
+  bool                    updated;
+  uint32_t                show_interval_ms;
+  uint32_t                show_next_ms;
 } value_st;
 
 

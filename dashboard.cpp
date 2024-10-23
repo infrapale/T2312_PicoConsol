@@ -1,4 +1,10 @@
-#include "SerialUSB.h"
+/******************************************************************************
+    dashboard.cpp  Show Time and measurements on the TFT display
+
+******************************************************************************/
+
+//  This sketch uses the GLCD (font 1) and fonts 2, 4, 6, 7, 8
+
 #include "main.h"
 #include "dashboard.h"
 #include "aio_mqtt.h"
@@ -18,6 +24,21 @@ typedef enum
   BOX_LOW_AREA,
   BOX_NBR_OF
 } boxes_et;
+
+typedef struct
+{
+    uint16_t x_pos;
+    uint16_t y_pos;
+    uint16_t width;
+    uint16_t height;
+    char     txt[TXT_LEN];
+    uint8_t  font_indx;
+    uint8_t  font_size;
+    uint16_t fill_color;
+    uint16_t border_color;
+    uint16_t text_color;
+
+} disp_box_st;
 
 typedef struct
 {
@@ -44,18 +65,6 @@ disp_box_st db_box[BOX_NBR_OF] =
   {  0,  64, 319,  32, "Box 4", 4, 1, TFT_BLACK, TFT_GOLD, TFT_WHITE},
   {  0,  96, 319,  32, "Box 5", 4, 1, TFT_BLACK, TFT_GOLD, TFT_WHITE},
   {  0,  90, 319,  90, "Box 6", 8, 1, TFT_BLACK, TFT_VIOLET, TFT_GOLD },
-};
-
-
-
-char zone_main_label[NBR_MAIN_ZONES][MAIN_ZONE_LABEL_LEN] =
-{ 
-  // 01234567890123456789
-    "Villa Astrid   ",
-    "Lilla Astrid   ",
-    "Laituri        ",
-    "Tampere        ",
-    "Ruuvi          "    
 };
 
 
@@ -89,6 +98,13 @@ atask_st dashboard_task_handle        =   {"Dashboard SM   ", 1000,   0,     0, 
 void dashboard_initialize(void)
 {
     atask_add_new(&dashboard_task_handle);
+    
+    tft.init();
+    tft.setRotation(3);
+    tft.setTextSize(1);
+    tft.fillScreen(TFT_BLACK);
+    dashboard_draw_box(0);  // clear dashboard
+
 }
 
 void dashboard_draw_box(uint8_t bindx)
@@ -206,9 +222,8 @@ void dashboard_update_task()
                     Serial.print("aio index: "); Serial.print(i); 
                     Serial.println(" = Updated ");
                     //subs_data[i].updated = false;
-                    Str = zone_main_label[subs_data[i].main_zone_index];
+                    Str = subs_data[i].location;
                     Str += " ";
-                    Str += subs_data[i].sub_zone;
                     Str.toCharArray(db_box[BOX_ROW_1].txt,40);
 
                     Str = measure_label[subs_data[i].unit_index];

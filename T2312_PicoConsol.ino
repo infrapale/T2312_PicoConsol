@@ -1,31 +1,21 @@
-/**
+/************************************************************************************************************************************
 @title T2312_PicoConsol.ino
 @git  	https://github.com/infrapale/T2312_PicoConsol
+************************************************************************************************************************************
+@HW Raspberry Pi Pico W on a pico TFT classig board
 
+************************************************************************************************************************************
 https://github.com/adafruit/Adafruit_MQTT_Library
-
-
 https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial1-creating-freertos-task-to-blink-led-in-arduino-uno
 https://circuitdigest.com/microcontroller-projects/arduino-freertos-tutorial-using-semaphore-and-mutex-in-freertos-with-arduino
-
 https://learn.adafruit.com/dvi-io/code-the-dashboard
+***********************************************************************************************************************************/
 
-
-
- */
-
-//  This sketch uses the GLCD (font 1) and fonts 2, 4, 6, 7, 8
- 
- 
-// Pause in milliseconds between screens, change to 0 to time font rendering
-#define WAIT 1000
-
-#define PIN_WIRE_SDA         (12u)
-#define PIN_WIRE_SCL         (13u)
 
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
 #include "main.h"
+#include "io.h"
 #include "menu.h"
 #include <WiFi.h>
 #include "Adafruit_MQTT.h"
@@ -40,10 +30,6 @@ https://learn.adafruit.com/dvi-io/code-the-dashboard
 #include "dashboard.h"
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
-
-// WiFi parameters
-#define WLAN_SSID       WIFI_SSID
-#define WLAN_PASS       WIFI_PASS
 
 
 void print_debug_task(void)
@@ -74,30 +60,16 @@ void setup(void) {
   atask_initialize();
   atask_add_new(&debug_task_handle);
   
-  menu_initialize();        // starting scan and read tasks
   dashboard_initialize();   // start dashboard task
-  // aio_mqtt_initialize();    // task is stopped - for debug purpose only
-
- 
-  tft.init();
-  tft.setRotation(3);
-  tft.setTextSize(1);
-  tft.fillScreen(TFT_BLACK);
-
-  menu_draw();
-
-  dashboard_draw_box(0);  // clear dashboard
-  log_initialize();
-  // log_fill_test_data(30);   log_fill_test_data(70);
+  menu_initialize();        // starting scan and read tasks
+  aio_mqtt_initialize();    // task is stopped - for debug purpose only
 }
 
 void setup1()
 {
   //Watchdog.reset();
-
   aio_mqtt_initialize();
   targetTime = millis() + 100;
-
 }
 
 // Fast running loop
@@ -113,6 +85,5 @@ void loop1()
   {
     aio_mqtt_stm();
     targetTime = millis() + 100;
-
   }
 }

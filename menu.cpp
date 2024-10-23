@@ -91,7 +91,10 @@ void menu_initialize(void)
 
   atask_add_new(&menu_key_task_handle);
   atask_add_new(&menu_key_scan_handle);
+  menu_draw();
+
 }
+
 
 void menu_read_machine(void)
 {
